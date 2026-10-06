@@ -1,15 +1,55 @@
 name: Refresh fares
- 
+
 on:
-schedule:
-- cron: "0 11 * * 1" # Mondays ~6 AM Central. Edit to change cadence.
-workflow_dispatch: # "Run workflow" button = on-demand refresh
-inputs:
-mode:
-description: "refresh | build-only | mock"
-default: "refresh"
- 
+  schedule:
+    - cron: "0 11 * * 1"      # Mondays ~6 AM Central. Edit to change cadence.
+  workflow_dispatch:           # "Run workflow" button = on-demand refresh
+    inputs:
+      mode:
+        description: "refresh | build-only | mock"
+        default: "refresh"
+
 permissions:
-contents: write
-pages: write
-id-token: write
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency: { group: refresh, cancel-in-progress: false }
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+
+      - name: Look up fares and build site
+        env:
+          IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
+        run: |
+          MODE="${{ github.event.inputs.mode || 'refresh' }}"
+          if [ "$MODE" = "build-only" ]; then python src/refresh.py --build-only
+          elif [ "$MODE" = "mock" ]; then python src/refresh.py --mock
+          else python src/refresh.py; fi
+
+      - name: Save fare cache
+        run: |
+          git config user.name  "fare-bot"
+          git config user.email "fare-bot@users.noreply.github.com"
+          [ -f data/fares.json ] && git add data/fares.json
+          git diff --cached --quiet || git commit -m "Fare refresh $(date -u +%F)"
+          git push
+
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: public }
+
+  deploy:
+    needs: refresh
+    runs-on: ubuntu-latest
+    environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4
