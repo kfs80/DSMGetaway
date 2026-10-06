@@ -1,0 +1,15 @@
+name: Refresh fares
+ 
+on:
+schedule:
+- cron: "0 11 * * 1" # Mondays ~6 AM Central. Edit to change cadence.
+workflow_dispatch: # "Run workflow" button = on-demand refresh
+inputs:
+mode:
+description: "refresh | build-only | mock"
+default: "refresh"
+ 
+permissions:
+contents: write
+pages: write
+id-token: write
