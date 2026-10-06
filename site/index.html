@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSM Weekend Getaways</title>
+<style>
+  :root { --bg:#f6f7f9; --ink:#1d2433; --mute:#6b7385; --line:#dfe3ea; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 20px 8px; }
+  h1 { margin:0 0 4px; font-size:22px; }
+  .sub { color:var(--mute); }
+  .bar { display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; padding:8px 20px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#fff; }
+  .seg button { border:0; background:none; padding:6px 12px; cursor:pointer; font:inherit; }
+  .seg button.on { background:var(--ink); color:#fff; }
+  .stats { display:flex; flex-wrap:wrap; gap:8px; padding:4px 20px 10px; }
+  .chip { background:#fff; border:1px solid var(--line); border-radius:999px; padding:4px 10px; font-size:12px; }
+  .chip b { font-variant-numeric: tabular-nums; }
+  .wrap { overflow:auto; margin:0 12px 20px; border:1px solid var(--line); border-radius:10px; background:#fff; max-height:calc(100vh - 190px); }
+  table { border-collapse:separate; border-spacing:0; }
+  th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); }
+  thead th { position:sticky; top:0; background:#fff; z-index:2; padding:8px 6px; font-weight:600; font-size:12px; white-space:nowrap; }
+  tbody th { position:sticky; left:0; background:#fff; z-index:1; text-align:left; padding:6px 10px; white-space:nowrap; font-weight:600; }
+  thead th:first-child { left:0; z-index:3; }
+  th .city { display:block; font-weight:400; color:var(--mute); font-size:11px; }
+  td { padding:0; min-width:112px; height:52px; vertical-align:middle; text-align:center; }
+  td a, td div.c { display:block; padding:5px 6px; color:inherit; text-decoration:none; height:100%; }
+  td .p { font-size:15px; font-weight:700; font-variant-numeric: tabular-nums; }
+  td .d { font-size:11px; }
+  td .tag { font-size:10px; opacity:.75; }
+  td.none { background:#eceef2; color:#9aa1b0; }
+  td.over { background:#fff; color:#9aa1b0; }
+  td.unchecked { background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f2f3f6 6px,#f2f3f6 12px); color:#9aa1b0; }
+  td.est .p::after { content:" ~"; font-weight:400; }
+  td.partial .tag::before { content:"◔ "; }
+  .legend { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--mute); }
+  .ramp { width:120px; height:10px; border-radius:5px; background:linear-gradient(90deg,hsl(130,60%,72%),hsl(55,85%,72%),hsl(0,75%,75%)); }
+  .sw { display:inline-block; width:14px; height:14px; border:1px solid var(--line); vertical-align:middle; }
+  footer { color:var(--mute); font-size:12px; padding:0 20px 20px; }
+  #tip { position:fixed; pointer-events:none; background:#1d2433; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px; max-width:280px; display:none; z-index:10; }
+  select { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <h1>✈️ DSM Weekend Getaways</h1>
+  <div class="sub" id="sub"></div>
+</header>
+
+<div class="bar">
+  <span class="seg" id="view">
+    <button data-v="month" class="on">By month</button>
+    <button data-v="weekend">By weekend</button>
+  </span>
+  <span class="seg" id="color">
+    <button data-v="grid" class="on" title="Compare all destinations">Color: whole grid</button>
+    <button data-v="row" title="Best timing per destination">Color: per destination</button>
+  </span>
+  <label>Max per person $<input id="cap" type="number" min="0" step="25" style="width:80px;font:inherit;padding:5px;border-radius:6px;border:1px solid var(--line)"></label>
+  <label>Sort
+    <select id="sort">
+      <option value="code">Airport code</option>
+      <option value="cheap">Cheapest first</option>
+      <option value="airline">Airline</option>
+    </select>
+  </label>
+  <span class="legend">cheap <span class="ramp"></span> pricey
+    &nbsp;<span class="sw" style="background:#fff"></span> over max
+    &nbsp;<span class="sw" style="background:#eceef2"></span> no flights
+    &nbsp;<span class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f2f3f6 3px,#f2f3f6 6px)"></span> not checked yet
+    &nbsp;<b>~</b> estimate &nbsp;◔ some trips unchecked</span>
+</div>
+<div class="stats" id="stats"></div>
+<div class="wrap"><table id="grid"></table></div>
+<footer id="foot"></footer>
+<div id="tip"></div>
+
+<div id="err" style="display:none;margin:10px 20px;padding:10px;border-radius:8px;background:#fde8e8;color:#8a1c1c"></div>
+<script>
+window.onerror = (m, src, line) => { const e = document.getElementById("err");
+  e.style.display = "block"; e.textContent = "Page error: " + m + " (line " + line + "). Try downloading the file and opening it in Edge or Chrome."; };
+const G = /*GRID_DATA*/null;
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+                set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+// Expand the compact data format written by refresh.py
+const ST = ["live", "estimate", "none", "unchecked"];
+const ymd = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+if (G) for (const r of G.routes) {
+  r.trips = r.t.map(a => {
+    const [y,m,d] = a[0].split("-").map(Number), dep = new Date(y, m-1, d);
+    const [y2,m2,d2] = a[1].split("-").map(Number), ret = new Date(y2, m2-1, d2);
+    const sat = new Date(dep); sat.setDate(dep.getDate() + (6 - dep.getDay() + 7) % 7);
+    const t = { dep:a[0], ret:a[1], status:ST[a[2]], days:Math.round((ret-dep)/864e5)+1,
+                month:a[0].slice(0,7), weekend:ymd(sat) };
+    if (a.length > 3) Object.assign(t, { per_person:a[3], total:a[4], bags:a[5], bag_fee_known:!!a[6], checked:a[7],
+      out:{ airline:a[8], flight:a[9], depart_time:a[10], price:a[11] },
+      in:{ airline:a[12], flight:a[13], depart_time:a[14], price:a[15] } });
+    return t;
+  });
+  delete r.t;
+}
+const $ = s => document.querySelector(s);
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const dt = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const short = s => { const d = dt(s); return `${WD[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`; };
+const money = n => "$" + Math.round(n).toLocaleString();
+const params = new URLSearchParams(location.search);
+let state = { view:"month", color:"grid", sort:"code",
+  cap: Number(params.get("max") || store.get("dsmCap2") || (G && G.settings.max_pp)) || 0 };
+
+function bookingUrl(code, t) {
+  return `https://www.google.com/travel/flights?q=${encodeURIComponent(
+    `nonstop flights from ${G.origin} to ${code} on ${t.dep} through ${t.ret}`)}`;
+}
+
+// Group a route's trips into columns; keep the cheapest priced trip per column.
+function cells(route, colKey) {
+  const out = {};
+  for (const t of route.trips) {
+    const k = t[colKey];
+    const c = out[k] || (out[k] = { best:null, n:0, unchecked:0, none:0, over:0, lowOver:null });
+    c.n++;
+    if (t.status === "unchecked") c.unchecked++;
+    else if (t.status === "none") c.none++;
+    else if (state.cap && t.per_person > state.cap) {
+      c.over++;
+      if (!c.lowOver || t.per_person < c.lowOver.per_person) c.lowOver = t;
+    }
+    else if (!c.best || t.total < c.best.total) c.best = t;
+  }
+  return out;
+}
+
+function hue(v, lo, hi) {
+  const f = hi > lo ? Math.min(1, Math.max(0, (v - lo) / (hi - lo))) : 0;
+  const h = 130 - 130 * f;                     // green -> red
+  return `hsl(${h},${60 + 25*Math.sin(Math.PI*f)}%,${72 + 3*f}%)`;
+}
+
+function render() {
+  const colKey = state.view;
+  const cols = [...new Set(G.routes.flatMap(r => r.trips.map(t => t[colKey])))].sort();
+  let rows = G.routes.map(r => ({ r, c: cells(r, colKey) }));
+  rows.forEach(x => {
+    const ps = Object.values(x.c).filter(c => c.best).map(c => c.best.per_person);
+    x.min = ps.length ? Math.min(...ps) : Infinity; x.max = ps.length ? Math.max(...ps) : 0;
+  });
+  if (state.sort === "cheap") rows.sort((a,b) => a.min - b.min);
+  else if (state.sort === "airline") rows.sort((a,b) => a.r.airlines.join().localeCompare(b.r.airlines.join()) || a.r.code.localeCompare(b.r.code));
+  else rows.sort((a,b) => a.r.code.localeCompare(b.r.code));
+
+  const all = rows.flatMap(x => Object.values(x.c).filter(c => c.best).map(c => c.best.per_person)).sort((a,b)=>a-b);
+  // Use 5th-95th percentile so one crazy fare doesn't wash out the colors.
+  const gLo = all[Math.floor(all.length*.05)] ?? 0, gHi = all[Math.floor(all.length*.95)] ?? 1;
+
+  const head = cols.map(k => {
+    if (colKey === "month") { const d = dt(k + "-01"); return `<th>${MON[d.getMonth()]} ${d.getFullYear()}</th>`; }
+    const d = dt(k); return `<th>Wknd of<br>${MON[d.getMonth()]} ${d.getDate()}</th>`;
+  }).join("");
+  let html = `<thead><tr><th>Destination</th>${head}</tr></thead><tbody>`;
+
+  for (const x of rows) {
+    const r = x.r;
+    html += `<tr><th>${r.code}${r.seasonal ? " <small style='font-weight:400;color:#6b7385'>seasonal</small>" : ""}<span class="city">${r.city} · ${r.airlines.join("/")}</span></th>`;
+    for (const k of cols) {
+      const c = x.c[k];
+      if (!c) { html += `<td class="none"></td>`; continue; }
+      if (!c.best && c.lowOver) {
+        const t = c.lowOver;
+        html += `<td class="over" title="Cheapest found: ${money(t.per_person)}/person, ${short(t.dep)} – ${short(t.ret)}"><div class="c">
+          <span class="tag">over ${money(state.cap)}</span><div class="d">low ${money(t.per_person)} pp${c.unchecked ? " ◔" : ""}</div></div></td>`;
+        continue;
+      }
+      if (!c.best) {
+        const cls = c.unchecked ? "unchecked" : "none";
+        html += `<td class="${cls}"><div class="c"><span class="tag">${c.unchecked ? "not checked" : "no nonstop"}</span></div></td>`;
+        continue;
+      }
+      const t = c.best;
+      const lo = state.color === "row" ? x.min : gLo, hi = state.color === "row" ? x.max : gHi;
+      const cls = [t.status === "estimate" ? "est" : "", c.unchecked ? "partial" : ""].join(" ");
+      const tag = `${G.settings.adults > 1 || G.settings.carry_on ? money(t.total) + " total · " : ""}${t.out.airline}${t.in.airline !== t.out.airline ? "/" + t.in.airline : ""} · ${t.days}d${t.bag_fee_known ? "" : " · bag ?"}`;
+      html += `<td class="${cls}" style="background:${hue(t.per_person, lo, hi)}" data-r="${r.code}" data-k="${k}">
+        <a href="${bookingUrl(r.code, t)}" target="_blank" rel="noopener">
+        <div class="p">${money(t.per_person)}<span style="font-size:11px;font-weight:400"> pp</span></div><div class="d">${short(t.dep)} – ${short(t.ret)}</div>
+        <div class="tag">${tag}</div></a></td>`;
+    }
+    html += "</tr>";
+  }
+  $("#grid").innerHTML = html + "</tbody>";
+  $("#grid").onmousemove = e => tip(e, rows, colKey);
+  $("#grid").onmouseleave = () => $("#tip").style.display = "none";
+}
+
+function tip(e, rows, colKey) {
+  const td = e.target.closest("td[data-r]"), el = $("#tip");
+  if (!td) { el.style.display = "none"; return; }
+  const x = rows.find(x => x.r.code === td.dataset.r), c = x.c[td.dataset.k], t = c.best;
+  const s = G.settings;
+  el.innerHTML = `<b>${G.origin} ⇄ ${x.r.code}</b> · ${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br>
+    Out: ${t.out.flight || t.out.airline} ${t.out.depart_time || ""} — ${money(t.out.price)}<br>
+    Back: ${t.in.flight || t.in.airline} ${t.in.depart_time || ""} — ${money(t.in.price)}<br>
+    ${money(t.per_person)} pp × ${s.adults}${s.carry_on ? ` + carry-ons ${t.bag_fee_known ? money(t.bags) : "(fee not set)"}` : ""} = <b>${money(t.total)}</b><br>
+    ${t.status === "live" ? "Live" : "Estimate / stale"} · checked ${t.checked}<br>
+    Trip options priced: ${c.n - c.unchecked - c.none} of ${c.n}${c.unchecked ? ` (${c.unchecked} not checked)` : ""}<br>
+    <i>Click to open in Google Flights</i>`;
+  el.style.display = "block";
+  el.style.left = Math.min(e.clientX + 14, innerWidth - 300) + "px";
+  el.style.top = Math.min(e.clientY + 14, innerHeight - 170) + "px";
+}
+
+function header() {
+  const s = G.settings, n = G.trip_counts, tot = Object.values(n).reduce((a,b)=>a+b,0);
+  const pct = k => tot ? Math.round(100 * (n[k]||0) / tot) : 0;
+  $("#sub").textContent = `Cheapest nonstop ${s.min_days}–${s.max_days} day trips · leave ${s.depart.join("/")}, return ${s.return.join("/")} · ` +
+    `prices per person, round trip · ${s.adults} adult${s.adults>1?"s":""}${s.carry_on ? " + carry-on each way" : ""} · next ${s.lookahead_days} days`;
+  $("#stats").innerHTML = [
+    `Updated <b>${new Date(G.generated).toLocaleString()}</b>`,
+    `Priced live <b>${pct("live")}%</b>`, `Estimate/stale <b>${pct("estimate")}%</b>`,
+    `No nonstop <b>${pct("none")}%</b>`, `Not checked <b>${pct("unchecked")}%</b>`,
+    G.run && G.run.attempted ? `Last run: ${G.run.ok} lookups ok, ${G.run.failed} failed, ${G.run.remaining} still queued` : "",
+  ].filter(Boolean).map(h => `<span class="chip">${h}</span>`).join("");
+  $("#foot").textContent = "Prices are base fares found by automated search and can change at any time. Confirm on the airline site before booking. Low-cost carriers charge extra for seats and bags.";
+}
+
+for (const [id, k] of [["#view","view"],["#color","color"]])
+  $(id).onclick = e => { const b = e.target.closest("button"); if (!b) return;
+    $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); state[k] = b.dataset.v; render(); };
+$("#cap").value = state.cap || "";
+$("#cap").oninput = e => { state.cap = Number(e.target.value) || 0; store.set("dsmCap2", state.cap); render(); };
+$("#sort").onchange = e => { state.sort = e.target.value; render(); };
+
+if (G) { header(); render(); }
+else $("#sub").textContent = "No data yet - run the refresh workflow.";
+</script>
+</body>
+</html>
