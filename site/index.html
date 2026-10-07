@@ -18,30 +18,30 @@
   .stats { display:flex; flex-wrap:wrap; gap:8px; padding:4px 20px 10px; }
   .chip { background:#fff; border:1px solid var(--line); border-radius:999px; padding:4px 10px; font-size:12px; }
   .chip b { font-variant-numeric: tabular-nums; }
-  .wrap { overflow:auto; margin:0 12px 20px; border:1px solid var(--line); border-radius:10px; background:#fff; max-height:calc(100vh - 190px); }
+  .wrap { overflow:auto; margin:0 12px 20px; border:1px solid var(--line); border-radius:10px; background:#fff; max-height:calc(100vh - 210px); }
   table { border-collapse:separate; border-spacing:0; }
   th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); }
   thead th { position:sticky; top:0; background:#fff; z-index:2; padding:8px 6px; font-weight:600; font-size:12px; white-space:nowrap; }
   tbody th { position:sticky; left:0; background:#fff; z-index:1; text-align:left; padding:6px 10px; white-space:nowrap; font-weight:600; }
   thead th:first-child { left:0; z-index:3; }
   th .city { display:block; font-weight:400; color:var(--mute); font-size:11px; }
-  td { padding:0; min-width:120px; height:52px; vertical-align:middle; text-align:center; }
+  td { padding:0; min-width:132px; height:52px; vertical-align:middle; text-align:center; }
   td a, td div.c { display:block; padding:5px 6px; color:inherit; text-decoration:none; height:100%; }
   td .p { font-size:15px; font-weight:700; font-variant-numeric: tabular-nums; }
   td .d { font-size:11px; }
   td .tag { font-size:10px; opacity:.8; }
   td .al { font-size:11px; font-weight:600; }
-  td.none { background:#eceef2; color:#9aa1b0; }
-  td.over { background:#fff; color:#9aa1b0; }
+  td.none { background:#fff; color:#9aa1b0; }
+  td.over { background:#c9cdd4; color:#4b5263; }
   td.unchecked { background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f2f3f6 6px,#f2f3f6 12px); color:#9aa1b0; }
   td.est .p::after { content:" ~"; font-weight:400; }
   td.partial .tag::before { content:"◔ "; }
-  .legend { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--mute); flex-wrap:wrap; }
-  .ramp { width:120px; height:10px; border-radius:5px; background:linear-gradient(90deg,hsl(130,60%,72%),hsl(55,85%,72%),hsl(0,75%,75%)); }
-  .sw { display:inline-block; width:14px; height:14px; border:1px solid var(--line); vertical-align:middle; }
+  .legend { display:flex; align-items:center; gap:4px 10px; font-size:12px; color:var(--mute); flex-wrap:wrap; padding:0 20px 6px; }
+  .legend span { display:inline-flex; align-items:center; gap:4px; }
+  .sw { display:inline-block; width:14px; height:14px; border:1px solid var(--line); border-radius:3px; vertical-align:middle; }
   footer { color:var(--mute); font-size:12px; padding:0 20px 20px; }
-  #tip { position:fixed; pointer-events:none; background:#1d2433; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px; max-width:300px; display:none; z-index:10; }
-  select, input { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); }
+  #tip { position:fixed; pointer-events:none; background:#1d2433; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px; max-width:320px; display:none; z-index:10; }
+  select, input { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); background:#fff; }
 </style>
 </head>
 <body>
@@ -52,13 +52,18 @@
 
 <div class="bar">
   <span class="seg" id="view">
-    <button data-v="month" class="on">By month</button>
-    <button data-v="weekend">By weekend</button>
+    <button data-v="weekend" class="on">By weekend</button>
+    <button data-v="month">By month</button>
   </span>
-  <span class="seg" id="color">
-    <button data-v="grid" class="on" title="Compare all destinations">Color: whole grid</button>
-    <button data-v="row" title="Best timing per destination">Color: per destination</button>
-  </span>
+  <label>People
+    <select id="people"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+  </label>
+  <label>Carry-ons / person
+    <select id="carry"><option>0</option><option>1</option><option>2</option></select>
+  </label>
+  <label>Checked bags / person
+    <select id="checked"><option>0</option><option>1</option><option>2</option></select>
+  </label>
   <label>Max per person $<input id="cap" type="number" min="0" step="25" style="width:80px"></label>
   <label>Sort
     <select id="sort">
@@ -67,12 +72,8 @@
       <option value="airline">Airline</option>
     </select>
   </label>
-  <span class="legend">cheap <span class="ramp"></span> pricey
-    &nbsp;<span class="sw" style="background:#fff"></span> over max
-    &nbsp;<span class="sw" style="background:#eceef2"></span> no flights
-    &nbsp;<span class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f2f3f6 3px,#f2f3f6 6px)"></span> not checked yet
-    &nbsp;<b>~</b> estimate &nbsp;◔ some trips unchecked</span>
 </div>
+<div class="legend" id="legend"></div>
 <div class="stats" id="stats"></div>
 <div id="err" style="display:none;margin:10px 20px;padding:10px;border-radius:8px;background:#fde8e8;color:#8a1c1c"></div>
 <div class="wrap"><table id="grid"></table></div>
@@ -83,15 +84,31 @@
 window.onerror = (m, src, line) => { const e = document.getElementById("err");
   e.style.display = "block"; e.textContent = "Page error: " + m + " (line " + line + "). Try opening the page in Edge or Chrome."; };
 const G = /*GRID_DATA*/null;
-const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } },
-                set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
 
-// Airline code -> name shown on the page. Add new airlines here.
+// ======================= SETTINGS (edit here) =======================
+const DEFAULT_MAX_PP   = 300;    // default "Max per person" box
+const BAG_FEE          = 40;     // flat $ per bag, per person, EACH WAY
+// Airlines that charge for a carry-on. Others include one free.
+const CARRY_ON_FEE_AIRLINES = ["G4", "F9", "NK"];   // Allegiant, Frontier, Spirit
+// Color bands: price per person (round trip, incl. bags). Above the last = gray.
+const BANDS = [
+  { max:  99, color:"#2fbf4a", label:"Under $100" },
+  { max: 149, color:"#9be39a", label:"$100–149"  },
+  { max: 199, color:"#fff176", label:"$150–199"  },
+  { max: 249, color:"#ffb74d", label:"$200–249"  },
+  { max: 299, color:"#ff7a6b", label:"$250–299"  },
+];
+const OVER_COLOR = "#c9cdd4";
+// Airline code -> name shown on the page.
 const AIRLINES = {
   G4: "Allegiant", F9: "Frontier", WN: "Southwest", AA: "American",
   DL: "Delta", UA: "United", SY: "Sun Country", NK: "Spirit",
   AS: "Alaska", B6: "JetBlue", MX: "Breeze", XP: "Avelo",
 };
+// ====================================================================
+
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+                set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
 const al = c => AIRLINES[c] || c || "?";
 
 // Expand the compact data format written by refresh.py
@@ -104,7 +121,7 @@ if (G) for (const r of G.routes) {
     const sat = new Date(dep); sat.setDate(dep.getDate() + (6 - dep.getDay() + 7) % 7);
     const t = { dep:a[0], ret:a[1], status:ST[a[2]], days:Math.round((ret-dep)/864e5)+1,
                 month:a[0].slice(0,7), weekend:ymd(sat) };
-    if (a.length > 3) Object.assign(t, { per_person:a[3], total:a[4], bags:a[5], bag_fee_known:!!a[6], checked:a[7],
+    if (a.length > 3) Object.assign(t, { fare:a[3], checked:a[7],
       out:{ airline:a[8], flight:a[9], depart_time:a[10], price:a[11] },
       in:{ airline:a[12], flight:a[13], depart_time:a[14], price:a[15] } });
     return t;
@@ -119,9 +136,33 @@ const short = s => { const d = dt(s); return `${WD[d.getDay()]} ${d.getMonth()+1
 const money = n => "$" + Math.round(n).toLocaleString();
 const time12 = t => { if (!t) return ""; const [h,m] = t.split(":").map(Number);
   return ` ${(h % 12) || 12}:${String(m).padStart(2,"0")} ${h < 12 ? "AM" : "PM"}`; };
+const num = (v, d) => { const n = Number(v); return Number.isFinite(n) && v !== null && v !== "" ? n : d; };
+
 const params = new URLSearchParams(location.search);
-let state = { view:"month", color:"grid", sort:"code",
-  cap: Number(params.get("max") || store.get("dsmCap2") || (G && G.settings.max_pp)) || 0 };
+let state = {
+  view: "weekend", sort: "code",
+  people:  num(store.get("dsmPeople"), 1),
+  carry:   num(store.get("dsmCarry"), 0),
+  checked: num(store.get("dsmChecked"), 0),
+  cap:     num(params.get("max") ?? store.get("dsmCap3"), DEFAULT_MAX_PP),
+};
+
+// Bag cost per person for one direction on one airline
+function bagsOneWay(airline) {
+  const carry = CARRY_ON_FEE_AIRLINES.includes(airline) ? state.carry : 0;
+  return (carry + state.checked) * BAG_FEE;
+}
+// Price everything with the current dropdowns
+function price(t) {
+  const bagOut = bagsOneWay(t.out.airline), bagIn = bagsOneWay(t.in.airline);
+  const fare = t.out.price + t.in.price;
+  const pp = fare + bagOut + bagIn;
+  return { fare, bags: bagOut + bagIn, pp, total: pp * state.people };
+}
+function bandColor(pp) {
+  for (const b of BANDS) if (pp <= b.max) return b.color;
+  return OVER_COLOR;
+}
 
 function bookingUrl(code, t) {
   return `https://www.google.com/travel/flights?q=${encodeURIComponent(
@@ -133,23 +174,16 @@ function cells(route, colKey) {
   const out = {};
   for (const t of route.trips) {
     const k = t[colKey];
-    const c = out[k] || (out[k] = { best:null, n:0, unchecked:0, none:0, over:0, lowOver:null });
+    const c = out[k] || (out[k] = { best:null, n:0, unchecked:0, none:0, lowOver:null });
     c.n++;
-    if (t.status === "unchecked") c.unchecked++;
-    else if (t.status === "none") c.none++;
-    else if (state.cap && t.per_person > state.cap) {
-      c.over++;
-      if (!c.lowOver || t.per_person < c.lowOver.per_person) c.lowOver = t;
-    }
-    else if (!c.best || t.total < c.best.total) c.best = t;
+    if (t.status === "unchecked") { c.unchecked++; continue; }
+    if (t.status === "none") { c.none++; continue; }
+    t.p = price(t);
+    if (state.cap && t.p.pp > state.cap) {
+      if (!c.lowOver || t.p.pp < c.lowOver.p.pp) c.lowOver = t;
+    } else if (!c.best || t.p.pp < c.best.p.pp) c.best = t;
   }
   return out;
-}
-
-function hue(v, lo, hi) {
-  const f = hi > lo ? Math.min(1, Math.max(0, (v - lo) / (hi - lo))) : 0;
-  const h = 130 - 130 * f;                     // green -> red
-  return `hsl(${h},${60 + 25*Math.sin(Math.PI*f)}%,${72 + 3*f}%)`;
 }
 
 function render() {
@@ -157,22 +191,21 @@ function render() {
   const cols = [...new Set(G.routes.flatMap(r => r.trips.map(t => t[colKey])))].sort();
   let rows = G.routes.map(r => ({ r, c: cells(r, colKey) }));
   rows.forEach(x => {
-    const ps = Object.values(x.c).filter(c => c.best).map(c => c.best.per_person);
-    x.min = ps.length ? Math.min(...ps) : Infinity; x.max = ps.length ? Math.max(...ps) : 0;
+    const ps = Object.values(x.c).filter(c => c.best).map(c => c.best.p.pp);
+    x.min = ps.length ? Math.min(...ps) : Infinity;
   });
   const names = r => r.airlines.map(al).join(", ");
   if (state.sort === "cheap") rows.sort((a,b) => a.min - b.min);
   else if (state.sort === "airline") rows.sort((a,b) => names(a.r).localeCompare(names(b.r)) || a.r.code.localeCompare(b.r.code));
   else rows.sort((a,b) => a.r.code.localeCompare(b.r.code));
 
-  const all = rows.flatMap(x => Object.values(x.c).filter(c => c.best).map(c => c.best.per_person)).sort((a,b)=>a-b);
-  const gLo = all[Math.floor(all.length*.05)] ?? 0, gHi = all[Math.floor(all.length*.95)] ?? 1;
-
   const head = cols.map(k => {
     if (colKey === "month") { const d = dt(k + "-01"); return `<th>${MON[d.getMonth()]} ${d.getFullYear()}</th>`; }
     const d = dt(k); return `<th>Wknd of<br>${MON[d.getMonth()]} ${d.getDate()}</th>`;
   }).join("");
   let html = `<thead><tr><th>Destination</th>${head}</tr></thead><tbody>`;
+  const showTotal = state.people > 1;
+  const hasBags = state.carry > 0 || state.checked > 0;
 
   for (const x of rows) {
     const r = x.r;
@@ -182,9 +215,8 @@ function render() {
       if (!c) { html += `<td class="none"></td>`; continue; }
       if (!c.best && c.lowOver) {
         const t = c.lowOver;
-        const pr = t.out.airline === t.in.airline ? al(t.out.airline) : `${al(t.out.airline)} out, ${al(t.in.airline)} back`;
-        html += `<td class="over" title="Cheapest found: ${money(t.per_person)}/person, ${short(t.dep)} – ${short(t.ret)}, ${pr}"><div class="c">
-          <span class="tag">over ${money(state.cap)}</span><div class="d">low ${money(t.per_person)} pp${c.unchecked ? " ◔" : ""}</div></div></td>`;
+        html += `<td class="over" title="Cheapest found: ${money(t.p.pp)}/person, ${short(t.dep)} – ${short(t.ret)}"><div class="c">
+          <span class="tag">over ${money(state.cap)}</span><div class="d">low ${money(t.p.pp)} pp${c.unchecked ? " ◔" : ""}</div></div></td>`;
         continue;
       }
       if (!c.best) {
@@ -193,13 +225,12 @@ function render() {
         continue;
       }
       const t = c.best;
-      const lo = state.color === "row" ? x.min : gLo, hi = state.color === "row" ? x.max : gHi;
       const cls = [t.status === "estimate" ? "est" : "", c.unchecked ? "partial" : ""].join(" ");
       const airline = t.out.airline === t.in.airline ? al(t.out.airline) : `${al(t.out.airline)} / ${al(t.in.airline)}`;
-      const tag = `${G.settings.adults > 1 || G.settings.carry_on ? money(t.total) + " total · " : ""}${t.days} days${t.bag_fee_known ? "" : " · bag ?"}`;
-      html += `<td class="${cls}" style="background:${hue(t.per_person, lo, hi)}" data-r="${r.code}" data-k="${k}">
+      const tag = `${showTotal ? money(t.p.total) + " total · " : ""}${t.days} days`;
+      html += `<td class="${cls}" style="background:${bandColor(t.p.pp)}" data-r="${r.code}" data-k="${k}">
         <a href="${bookingUrl(r.code, t)}" target="_blank" rel="noopener">
-        <div class="p">${money(t.per_person)}<span style="font-size:11px;font-weight:400"> pp</span></div>
+        <div class="p">${money(t.p.pp)}<span style="font-size:11px;font-weight:400"> pp${hasBags ? " w/ bags" : ""}</span></div>
         <div class="al">${airline}</div>
         <div class="d">${short(t.dep)} – ${short(t.ret)}</div>
         <div class="tag">${tag}</div></a></td>`;
@@ -209,48 +240,64 @@ function render() {
   $("#grid").innerHTML = html + "</tbody>";
   $("#grid").onmousemove = e => tip(e, rows);
   $("#grid").onmouseleave = () => $("#tip").style.display = "none";
+  header();
 }
 
 function tip(e, rows) {
   const td = e.target.closest("td[data-r]"), el = $("#tip");
   if (!td) { el.style.display = "none"; return; }
   const x = rows.find(x => x.r.code === td.dataset.r), c = x.c[td.dataset.k], t = c.best;
-  const s = G.settings;
+  const p = t.p;
   el.innerHTML = `<b>${G.origin} ⇄ ${x.r.code}</b> · ${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br>
     Out: ${al(t.out.airline)}${time12(t.out.depart_time)} — ${money(t.out.price)}<br>
     Back: ${al(t.in.airline)}${time12(t.in.depart_time)} — ${money(t.in.price)}<br>
     ${t.out.airline !== t.in.airline ? "<i>Two airlines: book as two one-way tickets</i><br>" : ""}
-    ${money(t.per_person)} pp × ${s.adults}${s.carry_on ? ` + carry-ons ${t.bag_fee_known ? money(t.bags) : "(fee not set)"}` : ""} = <b>${money(t.total)}</b><br>
+    Fare ${money(p.fare)}${p.bags ? ` + bags ${money(p.bags)}` : ""} = <b>${money(p.pp)} per person</b><br>
+    ${state.people > 1 ? `× ${state.people} people = <b>${money(p.total)}</b><br>` : ""}
     ${t.status === "live" ? "Live" : "Estimate / stale"} · checked ${t.checked}<br>
     Trip options priced: ${c.n - c.unchecked - c.none} of ${c.n}${c.unchecked ? ` (${c.unchecked} not checked)` : ""}<br>
     <i>Click to open in Google Flights</i>`;
   el.style.display = "block";
-  el.style.left = Math.min(e.clientX + 14, innerWidth - 320) + "px";
-  el.style.top = Math.min(e.clientY + 14, innerHeight - 190) + "px";
+  el.style.left = Math.min(e.clientX + 14, innerWidth - 340) + "px";
+  el.style.top = Math.min(e.clientY + 14, innerHeight - 210) + "px";
 }
 
 function header() {
   const s = G.settings, n = G.trip_counts, tot = Object.values(n).reduce((a,b)=>a+b,0);
   const pct = k => tot ? Math.round(100 * (n[k]||0) / tot) : 0;
+  const bagTxt = [state.carry ? `${state.carry} carry-on` : "", state.checked ? `${state.checked} checked bag${state.checked > 1 ? "s" : ""}` : ""].filter(Boolean).join(" + ");
   $("#sub").textContent = `Cheapest nonstop ${s.min_days}–${s.max_days} day trips · leave ${s.depart.join("/")}, return ${s.return.join("/")} · ` +
-    `prices per person, round trip · ${s.adults} adult${s.adults>1?"s":""}${s.carry_on ? " + carry-on each way" : ""} · next ${s.lookahead_days} days`;
+    `price per person, round trip${bagTxt ? ", incl. " + bagTxt + " each" : ""} · ${state.people} ${state.people > 1 ? "people" : "person"} · next ${s.lookahead_days} days`;
   $("#stats").innerHTML = [
     `Updated <b>${new Date(G.generated).toLocaleString()}</b>`,
     `Priced live <b>${pct("live")}%</b>`, `Estimate/stale <b>${pct("estimate")}%</b>`,
     `No nonstop <b>${pct("none")}%</b>`, `Not checked <b>${pct("unchecked")}%</b>`,
     G.run && G.run.attempted ? `Last run: ${G.run.ok} prices found, ${G.run.failed} failed, ${G.run.remaining} still queued` : "",
   ].filter(Boolean).map(h => `<span class="chip">${h}</span>`).join("");
-  $("#foot").textContent = "Prices are base fares found by automated search and can change at any time. Confirm on the airline site before booking. Allegiant and Frontier charge extra for carry-on bags and seats.";
+  $("#foot").textContent = `Prices are base fares found by automated search and can change at any time. Confirm on the airline site before booking. ` +
+    `Bags are estimated at a flat ${money(BAG_FEE)} per bag each way. Carry-on fees are added only for ${CARRY_ON_FEE_AIRLINES.map(al).join(", ")}; other airlines include a carry-on.`;
 }
 
-for (const [id, k] of [["#view","view"],["#color","color"]])
-  $(id).onclick = e => { const b = e.target.closest("button"); if (!b) return;
-    $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); state[k] = b.dataset.v; render(); };
+function legend() {
+  $("#legend").innerHTML = BANDS.map(b => `<span><i class="sw" style="background:${b.color}"></i>${b.label}</span>`).join("") +
+    `<span><i class="sw" style="background:${OVER_COLOR}"></i>Over max</span>` +
+    `<span><i class="sw" style="background:#fff"></i>No nonstop</span>` +
+    `<span><i class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f2f3f6 3px,#f2f3f6 6px)"></i>Not checked yet</span>` +
+    `<span><b>~</b> estimate</span><span>◔ some trips unchecked</span>`;
+}
+
+$("#view").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+  $("#view").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); state.view = b.dataset.v; render(); };
+for (const [id, k, sk] of [["#people","people","dsmPeople"],["#carry","carry","dsmCarry"],["#checked","checked","dsmChecked"]]) {
+  $(id).value = String(state[k]);
+  $(id).onchange = e => { state[k] = Number(e.target.value); store.set(sk, state[k]); render(); };
+}
 $("#cap").value = state.cap || "";
-$("#cap").oninput = e => { state.cap = Number(e.target.value) || 0; store.set("dsmCap2", state.cap); render(); };
+$("#cap").oninput = e => { state.cap = Number(e.target.value) || 0; store.set("dsmCap3", state.cap); render(); };
 $("#sort").onchange = e => { state.sort = e.target.value; render(); };
 
-if (G) { header(); render(); }
+legend();
+if (G) render();
 else $("#sub").textContent = "No data yet - run the refresh workflow.";
 </script>
 </body>
