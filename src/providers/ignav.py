@@ -15,6 +15,8 @@ class IgnavProvider(Provider):
 
     def __init__(self):
         self.key = os.environ.get("IGNAV_API_KEY", "").strip()
+        if not self.key:
+            self.why_unavailable = "IGNAV_API_KEY secret not set"
 
     def available(self):
         return bool(self.key)
@@ -30,7 +32,7 @@ class IgnavProvider(Provider):
             with urllib.request.urlopen(req, timeout=45) as r:
                 data = json.load(r)
         except urllib.error.HTTPError as e:
-            if e.code in (402, 429):
+            if e.code in (401, 402, 403, 429):
                 raise QuotaExhausted(f"ignav HTTP {e.code}")
             raise ProviderError(f"ignav HTTP {e.code}")
         except Exception as e:  # network / JSON

@@ -1,16 +1,15 @@
-"""Google Flights via the open-source `fast-flights` library (free, unofficial).
+"""Google Flights via the open-source `fast-flights` library, v3 (free, unofficial).
 
 Unofficial = it reads Google's public results page. It can break when Google
-changes the page, and heavy use may get rate-limited. The planner keeps volume
-low (weekly, cached, capped) and falls back to the next provider on errors.
+changes the page, and heavy use may get rate-limited. The refresh job keeps
+volume low (weekly, cached, capped) and falls back to the next provider.
 """
-import re
-
 from .base import Fare, Provider, ProviderError
 
 AIRLINE_CODES = {
     "allegiant": "G4", "american": "AA", "delta": "DL", "united": "UA",
     "southwest": "WN", "frontier": "F9", "sun country": "SY", "spirit": "NK",
+    "alaska": "AS", "jetblue": "B6", "breeze": "MX", "avelo": "XP",
 }
 
 
@@ -19,16 +18,7 @@ def _code(name):
     for k, v in AIRLINE_CODES.items():
         if k in n:
             return v
-    return name
-
-
-def _num(x):
-    if x is None:
-        return None
-    if isinstance(x, (int, float)):
-        return float(x)
-    m = re.search(r"[\d,]+(?:\.\d+)?", str(x))
-    return float(m.group().replace(",", "")) if m else None
+    return name or "?"
 
 
 class GoogleFlightsProvider(Provider):
@@ -38,46 +28,39 @@ class GoogleFlightsProvider(Provider):
         try:
             import fast_flights  # noqa: F401
             self._ok = True
-        except ImportError:
+        except Exception as e:
             self._ok = False
+            self.why_unavailable = f"could not import fast_flights: {type(e).__name__}: {e}"
 
     def available(self):
         return self._ok
 
-    def _search(self, origin, dest, date):
+    def cheapest_nonstop(self, origin, dest, date, airlines):
         import fast_flights as ff
-        if hasattr(ff, "create_query"):                      # v3 API
+        try:
             q = ff.create_query(
                 flights=[ff.FlightQuery(date=date, from_airport=origin,
-                                        to_airport=dest, max_stops=0)],
+                                        to_airport=dest)],
                 seat="economy", trip="one-way",
-                passengers=ff.Passengers(adults=1), currency="USD")
-            return ff.get_flights(q)
-        return ff.get_flights(                                # v2 API
-            flight_data=[ff.FlightData(date=date, from_airport=origin, to_airport=dest)],
-            trip="one-way", seat="economy",
-            passengers=ff.Passengers(adults=1), fetch_mode="fallback")
-
-    def cheapest_nonstop(self, origin, dest, date, airlines):
-        try:
-            res = self._search(origin, dest, date)
+                passengers=ff.Passengers(adults=1), currency="USD", max_stops=0)
+            res = ff.get_flights(q)
+        except ff.FlightsNotFound:
+            return Fare(price=None, source=self.name)
         except Exception as e:
-            raise ProviderError(f"google_flights: {e}")
-        flights = getattr(res, "flights", res) or []
+            raise ProviderError(f"google_flights: {type(e).__name__}: {str(e)[:150]}")
+
         best = None
-        for f in flights:
-            stops = getattr(f, "stops", None)
-            if stops not in (0, "0", None, "Nonstop"):
+        for f in list(res or []):
+            legs = getattr(f, "flights", None) or []
+            if len(legs) != 1:              # nonstop only
                 continue
-            price = _num(getattr(f, "price", None))
-            if price is None or price <= 0:
+            price = getattr(f, "price", None)
+            if not price or price <= 0:
                 continue
-            name = getattr(f, "name", None) or getattr(f, "airline", None)
-            if isinstance(name, (list, tuple)):
-                name = name[0] if name else None
-            name = getattr(name, "name", name)
             if best is None or price < best.price:
-                best = Fare(price=price, airline=_code(str(name or "")),
-                            depart_time=str(getattr(f, "departure", "") or "")[:40],
+                names = getattr(f, "airlines", None) or []
+                t = getattr(legs[0].departure, "time", None)
+                best = Fare(price=float(price), airline=_code(names[0] if names else ""),
+                            depart_time=f"{t[0]:02d}:{t[1]:02d}" if t else None,
                             source=self.name)
         return best or Fare(price=None, source=self.name)

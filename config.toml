@@ -14,7 +14,7 @@ max_trip_days     = 5
 min_days_out      = 3              # skip trips leaving sooner than this
 
 [party]
-adults            = 2              # cell price = per-person fare x adults (+ bags)
+adults            = 2              # total = per-person fare x adults (+ bags)
 carry_on_each_way = false          # true = add one carry-on per person, each direction
 
 # Max round-trip fare PER PERSON (base fare, both directions). Trips above this
@@ -22,16 +22,14 @@ carry_on_each_way = false          # true = add one carry-on per person, each di
 max_price_per_person = 200
 
 # Carry-on fee per person, per direction, by airline code (USD).
-# 0 = carry-on included in the fare. Set the low-cost carriers yourself from
-# their websites - fees vary by route and by when you buy, so leave them as
-# your best typical number. Unset airlines show a "bag fee ?" warning.
+# Only used when carry_on_each_way = true.
 [bag_fees]
 AA = 0     # American
 DL = 0     # Delta
 UA = 0     # United
 WN = 0     # Southwest
-# G4 = 0   # Allegiant  <- fill in
-# F9 = 0   # Frontier   <- fill in
+# G4 = 0   # Allegiant  <- fill in if you turn bags on
+# F9 = 0   # Frontier   <- fill in if you turn bags on
 
 [data]
 # Providers are tried in order for each lookup.
@@ -39,17 +37,16 @@ WN = 0     # Southwest
 #  "ignav"          = official API, 1,000 free requests, needs IGNAV_API_KEY.
 #  "mock"           = fake prices, for testing the site only.
 providers                = ["google_flights", "ignav"]
-max_lookups_per_run      = 2000  # hard cap per refresh (~1 hr). Leftovers roll to next run.
+max_lookups_per_run      = 400   # cap per refresh. Leftovers roll to the next run.
 max_paid_lookups_per_run = 50    # cap for "ignav" specifically
+max_minutes_per_run      = 50    # stop looking up after this, then save + publish
 pause_seconds            = 1.5   # be polite between lookups
 
 # How long a price stays "Live" before it is re-checked.
-# Near-term fares move more, far-out Allegiant fares rarely do.
-fresh_days_near = 14    # trips within near_window_days
-fresh_days_far  = 30
+fresh_days_near  = 14    # trips within near_window_days
+fresh_days_far   = 30
 near_window_days = 60
 
 # Auto-skip: if a route has had NO nonstop on a weekday this many times and
 # never had a fare that weekday, stop checking it (re-tested monthly).
-# Saves a lot of lookups on Allegiant routes that fly 2-4 days a week.
 learn_no_flight_after = 3

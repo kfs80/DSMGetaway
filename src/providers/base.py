@@ -27,6 +27,7 @@ class Provider:
     name = "base"
     is_paid = False          # counts against max_paid_lookups_per_run
     is_estimate = False      # True -> cells shown as "Estimate", not "Live"
+    why_unavailable = ""
 
     def available(self) -> bool:
         return True

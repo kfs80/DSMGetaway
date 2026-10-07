@@ -117,8 +117,8 @@ def skip_day(route, a, b, day, learned):
     return (a, b, day.weekday()) in learned
 
 
-def needed_lookups(cfg, routes, trips, today, learned):
-    """(key, origin, dest, date, route) for every leg the grid needs."""
+def needed_lookups(cfg, routes, trips, learned):
+    """{key: (origin, dest, date, route)} for every leg the grid needs."""
     o = cfg["origin"]
     legs = {}
     for r in routes:
@@ -132,56 +132,79 @@ def needed_lookups(cfg, routes, trips, today, learned):
 # ---------------------------------------------------------------- fetch
 def fetch(cfg, routes, trips, cache, today, provider_names):
     learned = learned_no_fly(cache, cfg, today)
-    legs = needed_lookups(cfg, routes, trips, today, learned)
+    legs = needed_lookups(cfg, routes, trips, learned)
     todo = [(k, *v) for k, v in legs.items() if not is_fresh(cache.get(k), v[2], cfg, today)]
-    # Missing first, then stale; soonest travel dates first.
-    todo.sort(key=lambda x: (x[0] in cache, x[3]))
+    todo.sort(key=lambda x: (x[0] in cache, x[3]))   # missing first, soonest first
+    print(f"{len(todo)} one-way fares need checking")
 
     providers = []
     for n in provider_names:
         p = REGISTRY[n]()
         if p.available():
             providers.append(p)
+            print(f"  provider '{n}': ready")
         else:
-            print(f"  provider '{n}' unavailable (library missing or no API key) - skipped")
+            print(f"  provider '{n}': NOT available - {p.why_unavailable}")
+    stats = {"attempted": 0, "ok": 0, "failed": 0, "remaining": len(todo), "by_provider": {}}
     if not providers:
         print("  no providers available; building grid from cache only")
-        return {"attempted": 0, "ok": 0, "failed": 0, "remaining": len(todo)}
+        return stats
 
     dc = cfg["data"]
     cap, paid_cap = dc["max_lookups_per_run"], dc["max_paid_lookups_per_run"]
+    deadline = time.monotonic() + 60 * dc.get("max_minutes_per_run", 50)
+    pause = 0 if providers[0].name == "mock" else dc["pause_seconds"]
     used = paid_used = ok = failed = 0
     dead = set()
+    errors_in_a_row = {}
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    stop_reason = "finished the list"
 
     for k, a, b, day, route in todo:
-        if used >= cap:
+        usable = [p for p in providers
+                  if p.name not in dead and not (p.is_paid and paid_used >= paid_cap)]
+        if not usable:
+            stop_reason = "all providers used up or failing"
             break
-        for p in providers:
-            if p.name in dead or (p.is_paid and paid_used >= paid_cap):
-                continue
+        if used >= cap:
+            stop_reason = f"hit max_lookups_per_run ({cap})"
+            break
+        if time.monotonic() > deadline:
+            stop_reason = f"hit max_minutes_per_run ({dc.get('max_minutes_per_run', 50)})"
+            break
+
+        for p in usable:
+            used += 1
+            paid_used += p.is_paid
             try:
-                used += 1
-                paid_used += p.is_paid
                 fare = p.cheapest_nonstop(a, b, day.isoformat(), route["airlines"])
                 cache[k] = {**fare.to_dict(), "checked": now, "estimate": p.is_estimate}
+                stats["by_provider"][p.name] = stats["by_provider"].get(p.name, 0) + 1
+                errors_in_a_row[p.name] = 0
                 ok += 1
                 break
             except QuotaExhausted as e:
-                print(f"  {e} - disabling for this run")
+                print(f"  {e} - not using {p.name} for the rest of this run")
                 dead.add(p.name)
             except ProviderError as e:
                 print(f"  {k}: {e}")
+                errors_in_a_row[p.name] = errors_in_a_row.get(p.name, 0) + 1
+                if errors_in_a_row[p.name] >= 15:
+                    print(f"  {p.name} failed 15 times in a row - not using it for the rest of this run")
+                    dead.add(p.name)
         else:
             failed += 1
-        if used % 25 == 0:
-            save_cache(cache)                       # checkpoint
-            print(f"  {used} lookups...")
-        time.sleep(dc["pause_seconds"] if providers[0].name != "mock" else 0)
+
+        if used and used % 25 == 0:
+            save_cache(cache)
+            print(f"  {used} lookups, {ok} prices saved...")
+        time.sleep(pause)
 
     save_cache(cache)
-    return {"attempted": used, "ok": ok, "failed": failed,
-            "remaining": max(0, len(todo) - ok)}
+    print(f"Stopped: {stop_reason}")
+    stats.update({"attempted": used, "ok": ok, "failed": failed,
+                  "remaining": max(0, len(todo) - ok), "stop_reason": stop_reason})
+    return stats
 
 
 # ---------------------------------------------------------------- grid
@@ -207,13 +230,10 @@ def build_grid(cfg, routes, trips, cache, today, stats):
     for r in routes:
         trips_out = []
         for d, ret in trips:
-            ko, ki = key(o, r["code"], d), key(r["code"], o, ret)
-            out, inn = cache.get(ko), cache.get(ki)
+            out, inn = cache.get(key(o, r["code"], d)), cache.get(key(r["code"], o, ret))
             skip_o = skip_day(r, o, r["code"], d, learned) and not out
             skip_i = skip_day(r, r["code"], o, ret, learned) and not inn
-            t = {"dep": d.isoformat(), "ret": ret.isoformat(),
-                 "days": (ret - d).days + 1,
-                 "month": d.strftime("%Y-%m"), "weekend": weekend_of(d).isoformat()}
+            t = {"dep": d.isoformat(), "ret": ret.isoformat()}
             if skip_o or skip_i or (out and out["price"] is None) or (inn and inn["price"] is None):
                 t["status"] = "none"
             elif not out or not inn:
@@ -275,6 +295,7 @@ def compact(grid):
 
 # ---------------------------------------------------------------- main
 def main():
+    global CACHE
     ap = argparse.ArgumentParser()
     ap.add_argument("--build-only", action="store_true")
     ap.add_argument("--mock", action="store_true")
@@ -285,7 +306,6 @@ def main():
     today = date.fromisoformat(args.today) if args.today else date.today()
     trips = candidate_trips(cfg, today)
     if args.mock:                       # keep fake prices out of the real cache
-        global CACHE
         CACHE = ROOT / "data" / "fares_mock.json"
     cache = load_cache()
     print(f"{len(routes)} routes x {len(trips)} trip-date pairs")
@@ -300,7 +320,8 @@ def main():
     OUT_DIR.mkdir(exist_ok=True)
     (OUT_DIR / "grid.json").write_text(json.dumps(grid))
     html = (ROOT / "site" / "index.html").read_text()
-    html = html.replace("/*GRID_DATA*/null", json.dumps(compact(grid), separators=(",", ":")).replace("</", "<\\/"))
+    html = html.replace("/*GRID_DATA*/null",
+                        json.dumps(compact(grid), separators=(",", ":")).replace("</", "<\\/"))
     (OUT_DIR / "index.html").write_text(html)
     print("trip status counts:", grid["trip_counts"])
     print(f"site written to {OUT_DIR}")

@@ -35,12 +35,12 @@
   td.unchecked { background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f2f3f6 6px,#f2f3f6 12px); color:#9aa1b0; }
   td.est .p::after { content:" ~"; font-weight:400; }
   td.partial .tag::before { content:"◔ "; }
-  .legend { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--mute); }
+  .legend { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--mute); flex-wrap:wrap; }
   .ramp { width:120px; height:10px; border-radius:5px; background:linear-gradient(90deg,hsl(130,60%,72%),hsl(55,85%,72%),hsl(0,75%,75%)); }
   .sw { display:inline-block; width:14px; height:14px; border:1px solid var(--line); vertical-align:middle; }
   footer { color:var(--mute); font-size:12px; padding:0 20px 20px; }
   #tip { position:fixed; pointer-events:none; background:#1d2433; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px; max-width:280px; display:none; z-index:10; }
-  select { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); }
+  select, input { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); }
 </style>
 </head>
 <body>
@@ -58,7 +58,7 @@
     <button data-v="grid" class="on" title="Compare all destinations">Color: whole grid</button>
     <button data-v="row" title="Best timing per destination">Color: per destination</button>
   </span>
-  <label>Max per person $<input id="cap" type="number" min="0" step="25" style="width:80px;font:inherit;padding:5px;border-radius:6px;border:1px solid var(--line)"></label>
+  <label>Max per person $<input id="cap" type="number" min="0" step="25" style="width:80px"></label>
   <label>Sort
     <select id="sort">
       <option value="code">Airport code</option>
@@ -73,14 +73,14 @@
     &nbsp;<b>~</b> estimate &nbsp;◔ some trips unchecked</span>
 </div>
 <div class="stats" id="stats"></div>
+<div id="err" style="display:none;margin:10px 20px;padding:10px;border-radius:8px;background:#fde8e8;color:#8a1c1c"></div>
 <div class="wrap"><table id="grid"></table></div>
 <footer id="foot"></footer>
 <div id="tip"></div>
 
-<div id="err" style="display:none;margin:10px 20px;padding:10px;border-radius:8px;background:#fde8e8;color:#8a1c1c"></div>
 <script>
 window.onerror = (m, src, line) => { const e = document.getElementById("err");
-  e.style.display = "block"; e.textContent = "Page error: " + m + " (line " + line + "). Try downloading the file and opening it in Edge or Chrome."; };
+  e.style.display = "block"; e.textContent = "Page error: " + m + " (line " + line + "). Try opening the page in Edge or Chrome."; };
 const G = /*GRID_DATA*/null;
 const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } },
                 set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
@@ -153,7 +153,6 @@ function render() {
   else rows.sort((a,b) => a.r.code.localeCompare(b.r.code));
 
   const all = rows.flatMap(x => Object.values(x.c).filter(c => c.best).map(c => c.best.per_person)).sort((a,b)=>a-b);
-  // Use 5th-95th percentile so one crazy fare doesn't wash out the colors.
   const gLo = all[Math.floor(all.length*.05)] ?? 0, gHi = all[Math.floor(all.length*.95)] ?? 1;
 
   const head = cols.map(k => {
@@ -191,11 +190,11 @@ function render() {
     html += "</tr>";
   }
   $("#grid").innerHTML = html + "</tbody>";
-  $("#grid").onmousemove = e => tip(e, rows, colKey);
+  $("#grid").onmousemove = e => tip(e, rows);
   $("#grid").onmouseleave = () => $("#tip").style.display = "none";
 }
 
-function tip(e, rows, colKey) {
+function tip(e, rows) {
   const td = e.target.closest("td[data-r]"), el = $("#tip");
   if (!td) { el.style.display = "none"; return; }
   const x = rows.find(x => x.r.code === td.dataset.r), c = x.c[td.dataset.k], t = c.best;
@@ -221,7 +220,7 @@ function header() {
     `Updated <b>${new Date(G.generated).toLocaleString()}</b>`,
     `Priced live <b>${pct("live")}%</b>`, `Estimate/stale <b>${pct("estimate")}%</b>`,
     `No nonstop <b>${pct("none")}%</b>`, `Not checked <b>${pct("unchecked")}%</b>`,
-    G.run && G.run.attempted ? `Last run: ${G.run.ok} lookups ok, ${G.run.failed} failed, ${G.run.remaining} still queued` : "",
+    G.run && G.run.attempted ? `Last run: ${G.run.ok} prices found, ${G.run.failed} failed, ${G.run.remaining} still queued` : "",
   ].filter(Boolean).map(h => `<span class="chip">${h}</span>`).join("");
   $("#foot").textContent = "Prices are base fares found by automated search and can change at any time. Confirm on the airline site before booking. Low-cost carriers charge extra for seats and bags.";
 }
