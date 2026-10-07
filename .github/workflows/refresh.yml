@@ -19,7 +19,7 @@ concurrency: { group: refresh, cancel-in-progress: false }
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,6 +27,7 @@ jobs:
       - run: pip install -r requirements.txt
 
       - name: Look up fares and build site
+        timeout-minutes: 70
         env:
           IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
         run: |
@@ -35,7 +36,14 @@ jobs:
           elif [ "$MODE" = "mock" ]; then python src/refresh.py --mock
           else python src/refresh.py; fi
 
+      # Safety net: if the lookup step failed or timed out, still build the
+      # site from whatever prices were saved so nothing is lost.
+      - name: Rebuild site from saved prices (only if lookup step failed)
+        if: failure() || cancelled()
+        run: python src/refresh.py --build-only
+
       - name: Save fare cache
+        if: always()
         run: |
           git config user.name  "fare-bot"
           git config user.email "fare-bot@users.noreply.github.com"
@@ -44,10 +52,12 @@ jobs:
           git push
 
       - uses: actions/upload-pages-artifact@v3
+        if: always()
         with: { path: public }
 
   deploy:
     needs: refresh
+    if: always()
     runs-on: ubuntu-latest
     environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
     steps:
