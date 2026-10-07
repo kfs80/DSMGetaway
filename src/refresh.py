@@ -93,14 +93,20 @@ def is_fresh(entry, travel_day, cfg, today):
 
 
 def learned_no_fly(cache, cfg, today):
-    """{(origin, dest, weekday)} patterns that never have a nonstop."""
+    """{(origin, dest, weekday, 'YYYY-MM')} patterns with no nonstop.
+
+    Learned per calendar month so seasonal routes (e.g. Florida in winter
+    only) are not marked "no flights" for the whole 6-month window just
+    because they don't fly this month.
+    """
     n = cfg["data"].get("learn_no_flight_after", 0)
     if not n:
         return set()
     seen = {}
     for k, v in cache.items():
         a, b, ds = k[:3], k[4:7], k[8:]
-        st = seen.setdefault((a, b, date.fromisoformat(ds).weekday()), [0, 0, ""])
+        d = date.fromisoformat(ds)
+        st = seen.setdefault((a, b, d.weekday(), ds[:7]), [0, 0, ""])
         st[0 if v["price"] is None else 1] += 1
         st[2] = max(st[2], v["checked"][:10])
     out = set()
@@ -114,7 +120,7 @@ def learned_no_fly(cache, cfg, today):
 def skip_day(route, a, b, day, learned):
     if route["fly_days"] is not None and day.weekday() not in route["fly_days"]:
         return True
-    return (a, b, day.weekday()) in learned
+    return (a, b, day.weekday(), day.strftime("%Y-%m")) in learned
 
 
 def needed_lookups(cfg, routes, trips, learned):
