@@ -1,0 +1,452 @@
+{
+"DSM-ATL-2026-10-14": {
+"airline": "DL",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "18:54",
+"estimate": false,
+"flight": "DL 2086",
+"price": 459.0,
+"source": "ignav"
+},
+"DSM-ATL-2026-10-15": {
+"airline": "DL",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "18:54",
+"estimate": false,
+"flight": "DL 2086",
+"price": 459.0,
+"source": "ignav"
+},
+"DSM-AUS-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-AUS-2026-10-15": {
+"airline": "G4",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "15:49",
+"estimate": false,
+"flight": "G4 452",
+"price": 209.0,
+"source": "ignav"
+},
+"DSM-AZA-2026-10-14": {
+"airline": "G4",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "08:00",
+"estimate": false,
+"flight": "G4 436",
+"price": 224.0,
+"source": "ignav"
+},
+"DSM-BNA-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-BNA-2026-10-15": {
+"airline": "G4",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "08:28",
+"estimate": false,
+"flight": "G4 326",
+"price": 354.0,
+"source": "ignav"
+},
+"DSM-BOS-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-BOS-2026-10-15": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-BUR-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-BUR-2026-10-15": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-CLT-2026-10-14": {
+"airline": "AA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "11:22",
+"estimate": false,
+"flight": "AA 2962",
+"price": 546.0,
+"source": "ignav"
+},
+"DSM-CLT-2026-10-15": {
+"airline": "AA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "11:22",
+"estimate": false,
+"flight": "AA 2962",
+"price": 564.0,
+"source": "ignav"
+},
+"DSM-DCA-2026-10-14": {
+"airline": "AA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "06:00",
+"estimate": false,
+"flight": "AA 5238",
+"price": 499.0,
+"source": "ignav"
+},
+"DSM-DCA-2026-10-15": {
+"airline": "AA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "14:26",
+"estimate": false,
+"flight": "AA 5296",
+"price": 548.0,
+"source": "ignav"
+},
+"DSM-DEN-2026-10-14": {
+"airline": "WN",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "18:35",
+"estimate": false,
+"flight": "WN 3964",
+"price": 390.0,
+"source": "ignav"
+},
+"DSM-DEN-2026-10-15": {
+"airline": "WN",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "19:10",
+"estimate": false,
+"flight": "WN 3967",
+"price": 390.0,
+"source": "ignav"
+},
+"DSM-DFW-2026-10-14": {
+"airline": "AA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "16:12",
+"estimate": false,
+"flight": "AA 1664",
+"price": 447.0,
+"source": "ignav"
+},
+"DSM-DFW-2026-10-15": {
+"airline": "AA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "16:12",
+"estimate": false,
+"flight": "AA 1664",
+"price": 502.0,
+"source": "ignav"
+},
+"DSM-DTW-2026-10-14": {
+"airline": "DL",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "10:22",
+"estimate": false,
+"flight": "DL 5058",
+"price": 459.0,
+"source": "ignav"
+},
+"DSM-DTW-2026-10-15": {
+"airline": "DL",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "10:22",
+"estimate": false,
+"flight": "DL 5058",
+"price": 459.0,
+"source": "ignav"
+},
+"DSM-EWR-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-EWR-2026-10-15": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-FLL-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-FLL-2026-10-15": {
+"airline": "G4",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "17:42",
+"estimate": false,
+"flight": "G4 518",
+"price": 257.0,
+"source": "ignav"
+},
+"DSM-GUF-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-HOU-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-HOU-2026-10-15": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-IAH-2026-10-14": {
+"airline": "UA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "15:02",
+"estimate": false,
+"flight": "UA 6117",
+"price": 429.0,
+"source": "ignav"
+},
+"DSM-IAH-2026-10-15": {
+"airline": "UA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "15:02",
+"estimate": false,
+"flight": "UA 6117",
+"price": 429.0,
+"source": "ignav"
+},
+"DSM-JAX-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-JAX-2026-10-15": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-LAS-2026-10-14": {
+"airline": "G4",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "14:42",
+"estimate": false,
+"flight": "G4 1625",
+"price": 241.0,
+"source": "ignav"
+},
+"DSM-LAX-2026-10-14": {
+"airline": "AA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "19:30",
+"estimate": false,
+"flight": "AA 6230",
+"price": 390.0,
+"source": "ignav"
+},
+"DSM-LGA-2026-10-14": {
+"airline": "DL",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "07:15",
+"estimate": false,
+"flight": "DL 4945",
+"price": 391.0,
+"source": "ignav"
+},
+"DSM-MCO-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-MDW-2026-10-14": {
+"airline": "WN",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "05:35",
+"estimate": false,
+"flight": "WN 448",
+"price": 284.0,
+"source": "ignav"
+},
+"DSM-MIA-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-MSP-2026-10-14": {
+"airline": "DL",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "10:57",
+"estimate": false,
+"flight": "DL 4998",
+"price": 399.0,
+"source": "ignav"
+},
+"DSM-ORD-2026-10-14": {
+"airline": "UA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "08:00",
+"estimate": false,
+"flight": "UA 2668",
+"price": 284.0,
+"source": "ignav"
+},
+"DSM-PDX-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-PGD-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-PHL-2026-10-14": {
+"airline": "AA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "13:15",
+"estimate": false,
+"flight": "AA 5479",
+"price": 385.0,
+"source": "ignav"
+},
+"DSM-PHX-2026-10-14": {
+"airline": "AA",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "14:30",
+"estimate": false,
+"flight": "AA 3019",
+"price": 276.0,
+"source": "ignav"
+},
+"DSM-PIE-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-RSW-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-SFB-2026-10-14": {
+"airline": "G4",
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": "12:45",
+"estimate": false,
+"flight": "G4 2900",
+"price": 286.0,
+"source": "ignav"
+},
+"DSM-SNA-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-SRQ-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+},
+"DSM-VPS-2026-10-14": {
+"airline": null,
+"checked": "2026-10-07T02:47:44+00:00",
+"depart_time": null,
+"estimate": false,
+"flight": null,
+"price": null,
+"source": "ignav"
+}
+}
