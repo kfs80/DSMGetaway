@@ -32,8 +32,8 @@
   td .tag { font-size:10px; opacity:.8; }
   td .al { font-size:11px; font-weight:600; }
   td.none { background:#fff; color:#9aa1b0; }
-  td.over { background:#c9cdd4; color:#4b5263; }
   td.unchecked { background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f2f3f6 6px,#f2f3f6 12px); color:#9aa1b0; }
+  td.pricey { color:#4b5263; }
   td.est .p::after { content:" ~"; font-weight:400; }
   td.partial .tag::before { content:"◔ "; }
   .legend { display:flex; align-items:center; gap:4px 10px; font-size:12px; color:var(--mute); flex-wrap:wrap; padding:0 20px 6px; }
@@ -41,7 +41,7 @@
   .sw { display:inline-block; width:14px; height:14px; border:1px solid var(--line); border-radius:3px; vertical-align:middle; }
   footer { color:var(--mute); font-size:12px; padding:0 20px 20px; }
   #tip { position:fixed; pointer-events:none; background:#1d2433; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px; max-width:320px; display:none; z-index:10; }
-  select, input { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); background:#fff; }
+  select { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); background:#fff; }
 </style>
 </head>
 <body>
@@ -64,7 +64,6 @@
   <label>Checked bags / person
     <select id="checked"><option>0</option><option>1</option><option>2</option></select>
   </label>
-  <label>Max per person $<input id="cap" type="number" min="0" step="25" style="width:80px"></label>
   <label>Sort
     <select id="sort">
       <option value="code">Airport code</option>
@@ -86,8 +85,7 @@ window.onerror = (m, src, line) => { const e = document.getElementById("err");
 const G = /*GRID_DATA*/null;
 
 // ======================= SETTINGS (edit here) =======================
-const DEFAULT_MAX_PP   = 300;    // default "Max per person" box
-const BAG_FEE          = 40;     // flat $ per bag, per person, EACH WAY
+const BAG_FEE = 40;     // flat $ per bag, per person, EACH WAY
 // Airlines that charge for a carry-on. Others include one free.
 const CARRY_ON_FEE_AIRLINES = ["G4", "F9", "NK"];   // Allegiant, Frontier, Spirit
 // Color bands: price per person (round trip, incl. bags). Above the last = gray.
@@ -98,7 +96,7 @@ const BANDS = [
   { max: 249, color:"#ffb74d", label:"$200–249"  },
   { max: 299, color:"#ff7a6b", label:"$250–299"  },
 ];
-const OVER_COLOR = "#c9cdd4";
+const OVER_COLOR = "#c9cdd4";   // $300 and up
 // Airline code -> name shown on the page.
 const AIRLINES = {
   G4: "Allegiant", F9: "Frontier", WN: "Southwest", AA: "American",
@@ -121,7 +119,7 @@ if (G) for (const r of G.routes) {
     const sat = new Date(dep); sat.setDate(dep.getDate() + (6 - dep.getDay() + 7) % 7);
     const t = { dep:a[0], ret:a[1], status:ST[a[2]], days:Math.round((ret-dep)/864e5)+1,
                 month:a[0].slice(0,7), weekend:ymd(sat) };
-    if (a.length > 3) Object.assign(t, { fare:a[3], checked:a[7],
+    if (a.length > 3) Object.assign(t, { checked:a[7],
       out:{ airline:a[8], flight:a[9], depart_time:a[10], price:a[11] },
       in:{ airline:a[12], flight:a[13], depart_time:a[14], price:a[15] } });
     return t;
@@ -136,29 +134,26 @@ const short = s => { const d = dt(s); return `${WD[d.getDay()]} ${d.getMonth()+1
 const money = n => "$" + Math.round(n).toLocaleString();
 const time12 = t => { if (!t) return ""; const [h,m] = t.split(":").map(Number);
   return ` ${(h % 12) || 12}:${String(m).padStart(2,"0")} ${h < 12 ? "AM" : "PM"}`; };
-const num = (v, d) => { const n = Number(v); return Number.isFinite(n) && v !== null && v !== "" ? n : d; };
+const num = (v, d) => { const n = Number(v); return v !== null && v !== "" && Number.isFinite(n) ? n : d; };
 
-const params = new URLSearchParams(location.search);
 let state = {
   view: "weekend", sort: "code",
   people:  num(store.get("dsmPeople"), 1),
   carry:   num(store.get("dsmCarry"), 0),
   checked: num(store.get("dsmChecked"), 0),
-  cap:     num(params.get("max") ?? store.get("dsmCap3"), DEFAULT_MAX_PP),
 };
 
-// Bag cost per person for one direction on one airline
 function bagsOneWay(airline) {
   const carry = CARRY_ON_FEE_AIRLINES.includes(airline) ? state.carry : 0;
   return (carry + state.checked) * BAG_FEE;
 }
-// Price everything with the current dropdowns
 function price(t) {
-  const bagOut = bagsOneWay(t.out.airline), bagIn = bagsOneWay(t.in.airline);
+  const bags = bagsOneWay(t.out.airline) + bagsOneWay(t.in.airline);
   const fare = t.out.price + t.in.price;
-  const pp = fare + bagOut + bagIn;
-  return { fare, bags: bagOut + bagIn, pp, total: pp * state.people };
+  const pp = fare + bags;
+  return { fare, bags, pp, total: pp * state.people };
 }
+const overMax = pp => pp > BANDS[BANDS.length - 1].max;
 function bandColor(pp) {
   for (const b of BANDS) if (pp <= b.max) return b.color;
   return OVER_COLOR;
@@ -174,14 +169,12 @@ function cells(route, colKey) {
   const out = {};
   for (const t of route.trips) {
     const k = t[colKey];
-    const c = out[k] || (out[k] = { best:null, n:0, unchecked:0, none:0, lowOver:null });
+    const c = out[k] || (out[k] = { best:null, n:0, unchecked:0, none:0 });
     c.n++;
     if (t.status === "unchecked") { c.unchecked++; continue; }
     if (t.status === "none") { c.none++; continue; }
     t.p = price(t);
-    if (state.cap && t.p.pp > state.cap) {
-      if (!c.lowOver || t.p.pp < c.lowOver.p.pp) c.lowOver = t;
-    } else if (!c.best || t.p.pp < c.best.p.pp) c.best = t;
+    if (!c.best || t.p.pp < c.best.p.pp) c.best = t;
   }
   return out;
 }
@@ -213,19 +206,13 @@ function render() {
     for (const k of cols) {
       const c = x.c[k];
       if (!c) { html += `<td class="none"></td>`; continue; }
-      if (!c.best && c.lowOver) {
-        const t = c.lowOver;
-        html += `<td class="over" title="Cheapest found: ${money(t.p.pp)}/person, ${short(t.dep)} – ${short(t.ret)}"><div class="c">
-          <span class="tag">over ${money(state.cap)}</span><div class="d">low ${money(t.p.pp)} pp${c.unchecked ? " ◔" : ""}</div></div></td>`;
-        continue;
-      }
       if (!c.best) {
         const cls = c.unchecked ? "unchecked" : "none";
         html += `<td class="${cls}"><div class="c"><span class="tag">${c.unchecked ? "not checked" : "no nonstop"}</span></div></td>`;
         continue;
       }
       const t = c.best;
-      const cls = [t.status === "estimate" ? "est" : "", c.unchecked ? "partial" : ""].join(" ");
+      const cls = [t.status === "estimate" ? "est" : "", c.unchecked ? "partial" : "", overMax(t.p.pp) ? "pricey" : ""].join(" ");
       const airline = t.out.airline === t.in.airline ? al(t.out.airline) : `${al(t.out.airline)} / ${al(t.in.airline)}`;
       const tag = `${showTotal ? money(t.p.total) + " total · " : ""}${t.days} days`;
       html += `<td class="${cls}" style="background:${bandColor(t.p.pp)}" data-r="${r.code}" data-k="${k}">
@@ -280,7 +267,7 @@ function header() {
 
 function legend() {
   $("#legend").innerHTML = BANDS.map(b => `<span><i class="sw" style="background:${b.color}"></i>${b.label}</span>`).join("") +
-    `<span><i class="sw" style="background:${OVER_COLOR}"></i>Over max</span>` +
+    `<span><i class="sw" style="background:${OVER_COLOR}"></i>$${BANDS[BANDS.length-1].max + 1}+</span>` +
     `<span><i class="sw" style="background:#fff"></i>No nonstop</span>` +
     `<span><i class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f2f3f6 3px,#f2f3f6 6px)"></i>Not checked yet</span>` +
     `<span><b>~</b> estimate</span><span>◔ some trips unchecked</span>`;
@@ -292,8 +279,6 @@ for (const [id, k, sk] of [["#people","people","dsmPeople"],["#carry","carry","d
   $(id).value = String(state[k]);
   $(id).onchange = e => { state[k] = Number(e.target.value); store.set(sk, state[k]); render(); };
 }
-$("#cap").value = state.cap || "";
-$("#cap").oninput = e => { state.cap = Number(e.target.value) || 0; store.set("dsmCap3", state.cap); render(); };
 $("#sort").onchange = e => { state.sort = e.target.value; render(); };
 
 legend();
