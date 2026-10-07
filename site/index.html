@@ -22,9 +22,12 @@
   table { border-collapse:separate; border-spacing:0; }
   th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); }
   thead th { position:sticky; top:0; background:#fff; z-index:2; padding:8px 6px; font-weight:600; font-size:12px; white-space:nowrap; }
-  tbody th { position:sticky; left:0; background:#fff; z-index:1; text-align:left; padding:6px 10px; white-space:nowrap; font-weight:600; }
+  tbody th { position:sticky; left:0; background:#fff; z-index:1; text-align:left; padding:6px 10px; white-space:nowrap; }
   thead th:first-child { left:0; z-index:3; }
-  th .city { display:block; font-weight:400; color:var(--mute); font-size:11px; }
+  th .city { display:block; font-size:14px; font-weight:700; color:var(--ink); }
+  th .meta { display:block; font-weight:400; color:var(--mute); font-size:11px; }
+  tr.state th, tr.state td { background:#eef1f5; border-bottom:1px solid var(--line); height:auto; }
+  tr.state th { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--mute); padding:4px 10px; }
   td { padding:0; min-width:132px; height:52px; vertical-align:middle; text-align:center; }
   td a, td div.c { display:block; padding:5px 6px; color:inherit; text-decoration:none; height:100%; }
   td .p { font-size:15px; font-weight:700; font-variant-numeric: tabular-nums; }
@@ -32,8 +35,8 @@
   td .tag { font-size:10px; opacity:.8; }
   td .al { font-size:11px; font-weight:600; }
   td.none { background:#fff; color:#9aa1b0; }
-  td.unchecked { background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f2f3f6 6px,#f2f3f6 12px); color:#9aa1b0; }
-  td.pricey { color:#4b5263; }
+  td.unchecked { background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f4f5f7 6px,#f4f5f7 12px); color:#9aa1b0; }
+  td.pricey { color:#5a6172; }
   td.est .p::after { content:" ~"; font-weight:400; }
   td.partial .tag::before { content:"◔ "; }
   .legend { display:flex; align-items:center; gap:4px 10px; font-size:12px; color:var(--mute); flex-wrap:wrap; padding:0 20px 6px; }
@@ -66,7 +69,8 @@
   </label>
   <label>Sort
     <select id="sort">
-      <option value="code">Airport code</option>
+      <option value="state">State</option>
+      <option value="city">City A–Z</option>
       <option value="cheap">Cheapest first</option>
       <option value="airline">Airline</option>
     </select>
@@ -90,18 +94,24 @@ const BAG_FEE = 40;     // flat $ per bag, per person, EACH WAY
 const CARRY_ON_FEE_AIRLINES = ["G4", "F9", "NK"];   // Allegiant, Frontier, Spirit
 // Color bands: price per person (round trip, incl. bags). Above the last = gray.
 const BANDS = [
-  { max:  99, color:"#2fbf4a", label:"Under $100" },
-  { max: 149, color:"#9be39a", label:"$100–149"  },
-  { max: 199, color:"#fff176", label:"$150–199"  },
-  { max: 249, color:"#ffb74d", label:"$200–249"  },
-  { max: 299, color:"#ff7a6b", label:"$250–299"  },
+  { max:  99, color:"#a8e0b2", label:"Under $100" },
+  { max: 149, color:"#d6f0d2", label:"$100–149"  },
+  { max: 199, color:"#fbf4c0", label:"$150–199"  },
+  { max: 249, color:"#fde0bb", label:"$200–249"  },
+  { max: 299, color:"#f9c6bf", label:"$250–299"  },
 ];
-const OVER_COLOR = "#c9cdd4";   // $300 and up
+const OVER_COLOR = "#e3e6eb";   // $300 and up
 // Airline code -> name shown on the page.
 const AIRLINES = {
   G4: "Allegiant", F9: "Frontier", WN: "Southwest", AA: "American",
   DL: "Delta", UA: "United", SY: "Sun Country", NK: "Spirit",
   AS: "Alaska", B6: "JetBlue", MX: "Breeze", XP: "Avelo",
+};
+const STATES = {
+  AL:"Alabama", AZ:"Arizona", CA:"California", CO:"Colorado", DC:"Washington DC", FL:"Florida",
+  GA:"Georgia", IL:"Illinois", MA:"Massachusetts", MI:"Michigan", MN:"Minnesota", NC:"North Carolina",
+  NJ:"New Jersey", NV:"Nevada", NY:"New York", OR:"Oregon", PA:"Pennsylvania", SC:"South Carolina",
+  TN:"Tennessee", TX:"Texas", UT:"Utah", WA:"Washington", MO:"Missouri", LA:"Louisiana",
 };
 // ====================================================================
 
@@ -113,8 +123,13 @@ const al = c => AIRLINES[c] || c || "?";
 const ST = ["live", "estimate", "none", "unchecked"];
 const ymd = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
 if (G) for (const r of G.routes) {
+  // routes.csv city is "City Name ST" -> split off the 2-letter state
+  const m = /^(.*\S)\s+([A-Z]{2})$/.exec(r.city.trim());
+  r.cityName = m ? m[1] : r.city;
+  r.state = m ? m[2] : "";
+  r.stateName = STATES[r.state] || r.state || "Other";
   r.trips = r.t.map(a => {
-    const [y,m,d] = a[0].split("-").map(Number), dep = new Date(y, m-1, d);
+    const [y,mo,d] = a[0].split("-").map(Number), dep = new Date(y, mo-1, d);
     const [y2,m2,d2] = a[1].split("-").map(Number), ret = new Date(y2, m2-1, d2);
     const sat = new Date(dep); sat.setDate(dep.getDate() + (6 - dep.getDay() + 7) % 7);
     const t = { dep:a[0], ret:a[1], status:ST[a[2]], days:Math.round((ret-dep)/864e5)+1,
@@ -137,7 +152,8 @@ const time12 = t => { if (!t) return ""; const [h,m] = t.split(":").map(Number);
 const num = (v, d) => { const n = Number(v); return v !== null && v !== "" && Number.isFinite(n) ? n : d; };
 
 let state = {
-  view: "weekend", sort: "code",
+  view: "weekend",
+  sort: store.get("dsmSort") || "state",
   people:  num(store.get("dsmPeople"), 1),
   carry:   num(store.get("dsmCarry"), 0),
   checked: num(store.get("dsmChecked"), 0),
@@ -188,9 +204,11 @@ function render() {
     x.min = ps.length ? Math.min(...ps) : Infinity;
   });
   const names = r => r.airlines.map(al).join(", ");
+  const byCity = (a,b) => a.r.cityName.localeCompare(b.r.cityName);
   if (state.sort === "cheap") rows.sort((a,b) => a.min - b.min);
-  else if (state.sort === "airline") rows.sort((a,b) => names(a.r).localeCompare(names(b.r)) || a.r.code.localeCompare(b.r.code));
-  else rows.sort((a,b) => a.r.code.localeCompare(b.r.code));
+  else if (state.sort === "airline") rows.sort((a,b) => names(a.r).localeCompare(names(b.r)) || byCity(a,b));
+  else if (state.sort === "city") rows.sort(byCity);
+  else rows.sort((a,b) => a.r.stateName.localeCompare(b.r.stateName) || byCity(a,b));
 
   const head = cols.map(k => {
     if (colKey === "month") { const d = dt(k + "-01"); return `<th>${MON[d.getMonth()]} ${d.getFullYear()}</th>`; }
@@ -199,10 +217,17 @@ function render() {
   let html = `<thead><tr><th>Destination</th>${head}</tr></thead><tbody>`;
   const showTotal = state.people > 1;
   const hasBags = state.carry > 0 || state.checked > 0;
+  let lastState = null;
 
   for (const x of rows) {
     const r = x.r;
-    html += `<tr><th>${r.code}${r.seasonal ? " <small style='font-weight:400;color:#6b7385'>seasonal</small>" : ""}<span class="city">${r.city}</span><span class="city">${names(r)}</span></th>`;
+    if (state.sort === "state" && r.stateName !== lastState) {
+      lastState = r.stateName;
+      html += `<tr class="state"><th>${r.stateName}</th><td colspan="${cols.length}"></td></tr>`;
+    }
+    html += `<tr><th><span class="city">${r.cityName}</span>` +
+      `<span class="meta">${r.code}${state.sort !== "state" && r.state ? " · " + r.state : ""}${r.seasonal ? " · seasonal" : ""}</span>` +
+      `<span class="meta">${names(r)}</span></th>`;
     for (const k of cols) {
       const c = x.c[k];
       if (!c) { html += `<td class="none"></td>`; continue; }
@@ -235,7 +260,7 @@ function tip(e, rows) {
   if (!td) { el.style.display = "none"; return; }
   const x = rows.find(x => x.r.code === td.dataset.r), c = x.c[td.dataset.k], t = c.best;
   const p = t.p;
-  el.innerHTML = `<b>${G.origin} ⇄ ${x.r.code}</b> · ${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br>
+  el.innerHTML = `<b>Des Moines ⇄ ${x.r.cityName}</b> (${x.r.code})<br>${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br>
     Out: ${al(t.out.airline)}${time12(t.out.depart_time)} — ${money(t.out.price)}<br>
     Back: ${al(t.in.airline)}${time12(t.in.depart_time)} — ${money(t.in.price)}<br>
     ${t.out.airline !== t.in.airline ? "<i>Two airlines: book as two one-way tickets</i><br>" : ""}
@@ -246,7 +271,7 @@ function tip(e, rows) {
     <i>Click to open in Google Flights</i>`;
   el.style.display = "block";
   el.style.left = Math.min(e.clientX + 14, innerWidth - 340) + "px";
-  el.style.top = Math.min(e.clientY + 14, innerHeight - 210) + "px";
+  el.style.top = Math.min(e.clientY + 14, innerHeight - 230) + "px";
 }
 
 function header() {
@@ -269,7 +294,7 @@ function legend() {
   $("#legend").innerHTML = BANDS.map(b => `<span><i class="sw" style="background:${b.color}"></i>${b.label}</span>`).join("") +
     `<span><i class="sw" style="background:${OVER_COLOR}"></i>$${BANDS[BANDS.length-1].max + 1}+</span>` +
     `<span><i class="sw" style="background:#fff"></i>No nonstop</span>` +
-    `<span><i class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f2f3f6 3px,#f2f3f6 6px)"></i>Not checked yet</span>` +
+    `<span><i class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f4f5f7 3px,#f4f5f7 6px)"></i>Not checked yet</span>` +
     `<span><b>~</b> estimate</span><span>◔ some trips unchecked</span>`;
 }
 
@@ -279,7 +304,8 @@ for (const [id, k, sk] of [["#people","people","dsmPeople"],["#carry","carry","d
   $(id).value = String(state[k]);
   $(id).onchange = e => { state[k] = Number(e.target.value); store.set(sk, state[k]); render(); };
 }
-$("#sort").onchange = e => { state.sort = e.target.value; render(); };
+$("#sort").value = state.sort;
+$("#sort").onchange = e => { state.sort = e.target.value; store.set("dsmSort", state.sort); render(); };
 
 legend();
 if (G) render();
