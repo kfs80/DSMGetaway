@@ -1,5 +1,6 @@
 """
 Round-trip pricing for legacy carriers (United, American, Delta).
+VERSION: v3 (retry without nonstop filter, error location in log)
 
 Why: legacy carriers price a one-way ticket close to a full round trip, so
 adding two one-way fares can nearly double their real cost. Allegiant,
@@ -20,6 +21,7 @@ Works with fast-flights v3 (FlightQuery / create_query) and older v2
 import random
 import re
 import time
+import traceback
 from datetime import datetime, timedelta, timezone
 
 DEFAULTS = {
@@ -75,7 +77,7 @@ def _code(name):
     return name[:2].upper() if name else "?"
 
 
-def _search(origin, dest, dep, ret):
+def _search(origin, dest, dep, ret, nonstop_filter=True):
     """Run a round-trip search with whichever fast-flights version is installed."""
     try:                                        # fast-flights v3 (current)
         from fast_flights import FlightQuery, Passengers, create_query, get_flights
@@ -83,10 +85,12 @@ def _search(origin, dest, dep, ret):
         FlightQuery = None
     if FlightQuery is not None:
         def leg(d, a, b):
-            try:
-                return FlightQuery(date=d.isoformat(), from_airport=a, to_airport=b, max_stops=0)
-            except TypeError:
-                return FlightQuery(date=d.isoformat(), from_airport=a, to_airport=b)
+            if nonstop_filter:
+                try:
+                    return FlightQuery(date=d.isoformat(), from_airport=a, to_airport=b, max_stops=0)
+                except TypeError:
+                    pass
+            return FlightQuery(date=d.isoformat(), from_airport=a, to_airport=b)
         legs = [leg(dep, origin, dest), leg(ret, dest, origin)]
         try:
             q = create_query(flights=legs, trip="round-trip", seat="economy",
@@ -101,12 +105,15 @@ def _search(origin, dest, dep, ret):
         raise RoundTripError(f"fast-flights not usable: {e}", fatal=True)
     legs = [FlightData(date=dep.isoformat(), from_airport=origin, to_airport=dest),
             FlightData(date=ret.isoformat(), from_airport=dest, to_airport=origin)]
+    kw = {"max_stops": 0} if nonstop_filter else {}
     return get_flights(flight_data=legs, trip="round-trip", seat="economy",
-                       passengers=Passengers(adults=1), fetch_mode="fallback", max_stops=0)
+                       passengers=Passengers(adults=1), fetch_mode="fallback", **kw)
 
 
 def _items(res):
     """Flatten whatever result shape the library returns into a list of options."""
+    if res is None:
+        return []
     for attr in ("flights", "results"):
         v = getattr(res, attr, None)
         if v is not None and not isinstance(v, (str, bytes)):
@@ -162,12 +169,23 @@ def _depart(f):
 
 def lookup_fast_flights(origin, dest, dep, ret):
     """Cheapest nonstop round trip (any flight time) via fast-flights / Google Flights."""
-    try:
-        res = _search(origin, dest, dep, ret)
-    except RoundTripError:
-        raise
-    except Exception as e:                      # network / parsing errors
-        raise RoundTripError(f"lookup failed: {type(e).__name__}: {e}")
+    # Try 1: nonstop-only search. Google sometimes returns a page fast-flights
+    # can't parse ("'NoneType' object is not subscriptable").
+    # Try 2: search without the nonstop filter and drop connections ourselves.
+    res, err, where = None, None, ""
+    for nonstop_filter in (True, False):
+        try:
+            res = _search(origin, dest, dep, ret, nonstop_filter)
+            if _items(res):
+                break
+        except RoundTripError:
+            raise
+        except Exception as e:                  # network / parsing errors
+            err = e
+            tb = traceback.extract_tb(e.__traceback__)[-1]
+            where = f"{tb.filename.split('site-packages/')[-1]}:{tb.lineno}"
+    if res is None and err is not None:
+        raise RoundTripError(f"lookup failed: {type(err).__name__}: {err} (at {where})")
     best = None
     for f in _items(res):
         if _stops(f) > 0:
@@ -236,6 +254,7 @@ def fetch(cfg, routes, trips, cache, today, is_fresh, mock=False, save=None):
     if not legacy_routes(routes, rt):
         print("Round-trip pricing: no routes with " + "/".join(rt["airlines"]))
         return stats
+    print("Round-trip pricing module v3")
     look = lookup_mock if mock else lookup_fast_flights
     pause = 0 if mock else cfg["data"].get("pause_seconds", 3)
     cap = rt["max_lookups_per_run"]
@@ -258,8 +277,7 @@ def fetch(cfg, routes, trips, cache, today, is_fresh, mock=False, save=None):
                 cache[k] = {**(best or {"price": None}), "checked": now}
                 stats["ok"] += 1
                 fails_in_a_row = 0
-                if best:
-                    print(f"  {k}: ${best['price']:.0f} {best['airline']}")
+                print(f"  {k}: " + (f"${best['price']:.0f} {best['airline']}" if best else "no nonstop"))
             except RoundTripError as e:
                 print(f"  {k}: {e}")
                 stats["failed"] += 1
