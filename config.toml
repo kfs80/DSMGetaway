@@ -9,7 +9,7 @@ origin = "DSM"
 lookahead_days    = 210            # 7-month outlook. Change to 90, 270, etc.
 depart_weekdays   = ["Wed", "Thu", "Fri"]
 return_weekdays   = ["Sun", "Mon", "Tue"]
-min_trip_days     = 3              # counted inclusively: Fri->Sun = 3 days
+min_trip_days     = 4              # counted inclusively: Fri->Sun = 3 days
 max_trip_days     = 5
 min_days_out      = 3              # skip trips leaving sooner than this
 
