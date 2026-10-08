@@ -14,13 +14,13 @@ Strategy (keeps lookups low):
   3. Each search returns every flight time for that date pair; we keep the
      cheapest, not the first.
 
-Results live in data/fares.json under keys starting with "RT|", so the
-existing workflow saves them with no changes.
+Works with fast-flights v3 (FlightQuery / create_query) and older v2
+(FlightData). Results live in data/fares.json under keys starting "RT|".
 """
 import random
 import re
 import time
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 DEFAULTS = {
     "enabled": True,
@@ -53,7 +53,9 @@ def trip_days(dep, ret):
 
 # ------------------------------------------------------------- lookups
 class RoundTripError(Exception):
-    pass
+    def __init__(self, msg, fatal=False):
+        super().__init__(msg)
+        self.fatal = fatal
 
 
 def _price(v):
@@ -73,42 +75,108 @@ def _code(name):
     return name[:2].upper() if name else "?"
 
 
-def lookup_fast_flights(origin, dest, dep, ret):
-    """Cheapest nonstop round trip via fast-flights (reads Google Flights)."""
-    try:
+def _search(origin, dest, dep, ret):
+    """Run a round-trip search with whichever fast-flights version is installed."""
+    try:                                        # fast-flights v3 (current)
+        from fast_flights import FlightQuery, Passengers, create_query, get_flights
+    except ImportError:
+        FlightQuery = None
+    if FlightQuery is not None:
+        def leg(d, a, b):
+            try:
+                return FlightQuery(date=d.isoformat(), from_airport=a, to_airport=b, max_stops=0)
+            except TypeError:
+                return FlightQuery(date=d.isoformat(), from_airport=a, to_airport=b)
+        legs = [leg(dep, origin, dest), leg(ret, dest, origin)]
+        try:
+            q = create_query(flights=legs, trip="round-trip", seat="economy",
+                             passengers=Passengers(adults=1), currency="USD")
+        except TypeError:
+            q = create_query(flights=legs, trip="round-trip", seat="economy",
+                             passengers=Passengers(adults=1))
+        return get_flights(q)
+    try:                                        # fast-flights v2 (older)
         from fast_flights import FlightData, Passengers, get_flights
     except ImportError as e:
-        raise RoundTripError(f"fast-flights not installed: {e}")
+        raise RoundTripError(f"fast-flights not usable: {e}", fatal=True)
+    legs = [FlightData(date=dep.isoformat(), from_airport=origin, to_airport=dest),
+            FlightData(date=ret.isoformat(), from_airport=dest, to_airport=origin)]
+    return get_flights(flight_data=legs, trip="round-trip", seat="economy",
+                       passengers=Passengers(adults=1), fetch_mode="fallback", max_stops=0)
 
-    def leg(d, a, b):
-        try:
-            return FlightData(date=d.isoformat(), from_airport=a, to_airport=b, max_stops=0)
-        except TypeError:                       # older versions have no max_stops
-            return FlightData(date=d.isoformat(), from_airport=a, to_airport=b)
 
+def _items(res):
+    """Flatten whatever result shape the library returns into a list of options."""
+    for attr in ("flights", "results"):
+        v = getattr(res, attr, None)
+        if v is not None and not isinstance(v, (str, bytes)):
+            res = v
+            break
     try:
-        res = get_flights(flight_data=[leg(dep, origin, dest), leg(ret, dest, origin)],
-                          trip="round-trip", seat="economy",
-                          passengers=Passengers(adults=1), fetch_mode="fallback")
-    except Exception as e:                      # library raises many kinds
-        raise RoundTripError(f"lookup failed: {e}")
+        return list(res)
+    except TypeError:
+        return []
 
+
+def _stops(f):
+    s = getattr(f, "stops", None)
+    if isinstance(s, int):
+        return s
+    if isinstance(s, str):
+        return 0 if "nonstop" in s.lower() else (int(s) if s.isdigit() else 1)
+    legs = getattr(f, "flights", None)
+    if isinstance(legs, (list, tuple)) and legs:
+        return len(legs) - 1
+    return 0
+
+
+def _airline(f):
+    for attr in ("airlines", "name", "airline"):
+        v = getattr(f, attr, None)
+        if isinstance(v, (list, tuple)) and v:
+            v = v[0]
+        if v:
+            return _code(str(getattr(v, "name", v)))
+    return "?"
+
+
+def _depart(f):
+    legs = getattr(f, "flights", None)
+    src = legs[0] if isinstance(legs, (list, tuple)) and legs else f
+    v = getattr(src, "departure", None) or getattr(src, "departure_time", None)
+    if v is None:
+        return None
+    if hasattr(v, "hour"):
+        return f"{v.hour:02d}:{v.minute:02d}"
+    t = getattr(v, "time", None)
+    if isinstance(t, (list, tuple)) and len(t) >= 2:
+        return f"{int(t[0]):02d}:{int(t[1]):02d}"
+    m = re.search(r"(\d{1,2}):(\d{2})\s*([AP]M)?", str(v))
+    if not m:
+        return None
+    h = int(m.group(1))
+    if m.group(3):
+        h = h % 12 + (12 if m.group(3) == "PM" else 0)
+    return f"{h:02d}:{m.group(2)}"
+
+
+def lookup_fast_flights(origin, dest, dep, ret):
+    """Cheapest nonstop round trip (any flight time) via fast-flights / Google Flights."""
+    try:
+        res = _search(origin, dest, dep, ret)
+    except RoundTripError:
+        raise
+    except Exception as e:                      # network / parsing errors
+        raise RoundTripError(f"lookup failed: {type(e).__name__}: {e}")
     best = None
-    for f in getattr(res, "flights", []) or []:
-        stops = getattr(f, "stops", 0)
-        if isinstance(stops, int) and stops > 0:
+    for f in _items(res):
+        if _stops(f) > 0:
             continue
         p = _price(getattr(f, "price", None))
         if not p:
             continue
         if best is None or p < best["price"]:
-            dep_txt = str(getattr(f, "departure", "") or "")
-            m = re.search(r"(\d{1,2}):(\d{2})\s*([AP]M)", dep_txt)
-            hhmm = None
-            if m:
-                h = int(m.group(1)) % 12 + (12 if m.group(3) == "PM" else 0)
-                hhmm = f"{h:02d}:{m.group(2)}"
-            best = {"price": p, "airline": _code(getattr(f, "name", "")), "depart_time": hhmm}
+            best = {"price": p, "airline": _airline(f), "depart_time": _depart(f)}
     return best          # None = no nonstop round trip found
 
 
@@ -180,7 +248,6 @@ def fetch(cfg, routes, trips, cache, today, is_fresh, mock=False, save=None):
         for k, r, dep, ret in todo:
             if stats["attempted"] >= cap:
                 print(f"  hit roundtrip max_lookups_per_run ({cap})")
-                stats["remaining"] = len(todo)
                 return stats
             if fails_in_a_row >= 10:
                 print("  10 round-trip failures in a row - stopping round-trip pricing this run")
@@ -191,10 +258,15 @@ def fetch(cfg, routes, trips, cache, today, is_fresh, mock=False, save=None):
                 cache[k] = {**(best or {"price": None}), "checked": now}
                 stats["ok"] += 1
                 fails_in_a_row = 0
+                if best:
+                    print(f"  {k}: ${best['price']:.0f} {best['airline']}")
             except RoundTripError as e:
                 print(f"  {k}: {e}")
                 stats["failed"] += 1
                 fails_in_a_row += 1
+                if e.fatal:
+                    print("  round-trip pricing can't run - skipping it this run")
+                    return stats
             if save and stats["attempted"] % 10 == 0:
                 save(cache)
             time.sleep(pause)
