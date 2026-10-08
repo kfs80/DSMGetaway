@@ -21,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from providers import REGISTRY, ProviderError, QuotaExhausted  # noqa: E402
+import roundtrip as RT  # noqa: E402
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 CACHE = ROOT / "data" / "fares.json"
@@ -104,6 +105,8 @@ def learned_no_fly(cache, cfg, today):
         return set()
     seen = {}
     for k, v in cache.items():
+        if k.startswith("RT|"):          # round-trip entries, not one-way legs
+            continue
         a, b, ds = k[:3], k[4:7], k[8:]
         d = date.fromisoformat(ds)
         st = seen.setdefault((a, b, d.weekday(), ds[:7]), [0, 0, ""])
@@ -258,6 +261,19 @@ def build_grid(cfg, routes, trips, cache, today, stats):
                     "in": {k: inn.get(k) for k in ("price", "airline", "flight", "depart_time")},
                     "checked": min(out["checked"], inn["checked"])[:10],
                 })
+            rt = RT.best_rt(cache, r["code"], d, ret)
+            if rt and (t.get("per_person") is None or rt["price"] < t["per_person"]):
+                bo, ok_o = bag_cost(rt["airline"])
+                t.update({
+                    "status": "live" if is_fresh(rt, d, cfg, today) else "estimate",
+                    "per_person": round(rt["price"], 2),
+                    "total": round(rt["price"] * adults + 2 * bo, 2),
+                    "bags": round(2 * bo, 2), "bag_fee_known": ok_o, "rt": 1,
+                    "out": {"price": rt["price"], "airline": rt["airline"], "flight": "",
+                            "depart_time": rt.get("depart_time")},
+                    "in": {"price": 0, "airline": rt["airline"], "flight": "", "depart_time": None},
+                    "checked": rt["checked"][:10],
+                })
             trips_out.append(t)
         rows.append({"code": r["code"], "city": r["city"], "airlines": r["airlines"],
                      "seasonal": r["seasonal"], "trips": trips_out})
@@ -276,7 +292,7 @@ def build_grid(cfg, routes, trips, cache, today, stats):
                      "return": cfg["trip"]["return_weekdays"],
                      "min_days": cfg["trip"]["min_trip_days"],
                      "max_days": cfg["trip"]["max_trip_days"]},
-        "run": stats, "trip_counts": counts, "routes": rows,
+        "run": stats, "rt_airlines": RT.settings(cfg)["airlines"], "trip_counts": counts, "routes": rows,
     }
 
 
@@ -293,7 +309,7 @@ def compact(grid):
                 o, i = t["out"], t["in"]
                 row += [t["per_person"], t["total"], t["bags"], int(t["bag_fee_known"]), t["checked"],
                         o["airline"], o["flight"], o["depart_time"], o["price"],
-                        i["airline"], i["flight"], i["depart_time"], i["price"]]
+                        i["airline"], i["flight"], i["depart_time"], i["price"], t.get("rt", 0)]
             rows.append(row)
         g["routes"].append({**{k: r[k] for k in ("code", "city", "airlines", "seasonal")}, "t": rows})
     return g
@@ -320,6 +336,9 @@ def main():
     if not args.build_only:
         names = ["mock"] if args.mock else cfg["data"]["providers"]
         stats = fetch(cfg, routes, trips, cache, today, names)
+        stats["roundtrip"] = RT.fetch(cfg, routes, trips, cache, today, is_fresh,
+                                      mock=args.mock, save=save_cache)
+        save_cache(cache)
     print("lookups:", stats)
 
     grid = build_grid(cfg, routes, trips, cache, today, stats)
