@@ -50,3 +50,5 @@ near_window_days = 60
 # Auto-skip: if a route has had NO nonstop on a weekday this many times and
 # never had a fare that weekday, stop checking it (re-tested monthly).
 learn_no_flight_after = 3
+[roundtrip]
+max_lookups_per_run = 300
