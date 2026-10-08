@@ -34,6 +34,7 @@
   td .d { font-size:11px; }
   td .tag { font-size:10px; opacity:.8; }
   td .al { font-size:11px; font-weight:600; }
+  .rt { display:inline-block; font-size:9px; font-weight:700; padding:0 4px; margin-left:4px; border-radius:4px; background:#1d2433; color:#fff; vertical-align:1px; }
   td.none { background:#fff; color:#9aa1b0; }
   td.unchecked { background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f4f5f7 6px,#f4f5f7 12px); color:#9aa1b0; }
   td.pricey { color:#5a6172; }
@@ -136,7 +137,7 @@ if (G) for (const r of G.routes) {
                 month:a[0].slice(0,7), weekend:ymd(sat) };
     if (a.length > 3) Object.assign(t, { checked:a[7],
       out:{ airline:a[8], flight:a[9], depart_time:a[10], price:a[11] },
-      in:{ airline:a[12], flight:a[13], depart_time:a[14], price:a[15] } });
+      in:{ airline:a[12], flight:a[13], depart_time:a[14], price:a[15] }, rt:a[16] === 1 });
     return t;
   });
   delete r.t;
@@ -243,7 +244,7 @@ function render() {
       html += `<td class="${cls}" style="background:${bandColor(t.p.pp)}" data-r="${r.code}" data-k="${k}">
         <a href="${bookingUrl(r.code, t)}" target="_blank" rel="noopener">
         <div class="p">${money(t.p.pp)}<span style="font-size:11px;font-weight:400"> pp${hasBags ? " w/ bags" : ""}</span></div>
-        <div class="al">${airline}</div>
+        <div class="al">${airline}${t.rt ? '<span class="rt">RT</span>' : ''}</div>
         <div class="d">${short(t.dep)} – ${short(t.ret)}</div>
         <div class="tag">${tag}</div></a></td>`;
     }
@@ -261,9 +262,11 @@ function tip(e, rows) {
   const x = rows.find(x => x.r.code === td.dataset.r), c = x.c[td.dataset.k], t = c.best;
   const p = t.p;
   el.innerHTML = `<b>Des Moines ⇄ ${x.r.cityName}</b> (${x.r.code})<br>${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br>
-    Out: ${al(t.out.airline)}${time12(t.out.depart_time)} — ${money(t.out.price)}<br>
+    ${t.rt
+      ? `${al(t.out.airline)} round-trip ticket${t.out.depart_time ? " · out" + time12(t.out.depart_time) : ""} — ${money(t.out.price)}<br><i>Priced as one round-trip ticket (cheaper than two one-ways on this airline)</i><br>`
+      : `Out: ${al(t.out.airline)}${time12(t.out.depart_time)} — ${money(t.out.price)}<br>
     Back: ${al(t.in.airline)}${time12(t.in.depart_time)} — ${money(t.in.price)}<br>
-    ${t.out.airline !== t.in.airline ? "<i>Two airlines: book as two one-way tickets</i><br>" : ""}
+    ${t.out.airline !== t.in.airline ? "<i>Two airlines: book as two one-way tickets</i><br>" : ""}`}
     Fare ${money(p.fare)}${p.bags ? ` + bags ${money(p.bags)}` : ""} = <b>${money(p.pp)} per person</b><br>
     ${state.people > 1 ? `× ${state.people} people = <b>${money(p.total)}</b><br>` : ""}
     ${t.status === "live" ? "Live" : "Estimate / stale"} · checked ${t.checked}<br>
@@ -287,7 +290,8 @@ function header() {
     G.run && G.run.attempted ? `Last run: ${G.run.ok} prices found, ${G.run.failed} failed, ${G.run.remaining} still queued` : "",
   ].filter(Boolean).map(h => `<span class="chip">${h}</span>`).join("");
   $("#foot").textContent = `Prices are base fares found by automated search and can change at any time. Confirm on the airline site before booking. ` +
-    `Bags are estimated at a flat ${money(BAG_FEE)} per bag each way. Carry-on fees are added only for ${CARRY_ON_FEE_AIRLINES.map(al).join(", ")}; other airlines include a carry-on.`;
+    `Bags are estimated at a flat ${money(BAG_FEE)} per bag each way. Carry-on fees are added only for ${CARRY_ON_FEE_AIRLINES.map(al).join(", ")}; other airlines include a carry-on. ` +
+    `${(G.rt_airlines || []).map(al).join(", ")} prices marked RT are real round-trip fares; all others are two one-way fares added together.`;
 }
 
 function legend() {
@@ -295,7 +299,8 @@ function legend() {
     `<span><i class="sw" style="background:${OVER_COLOR}"></i>$${BANDS[BANDS.length-1].max + 1}+</span>` +
     `<span><i class="sw" style="background:#fff"></i>No nonstop</span>` +
     `<span><i class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f4f5f7 3px,#f4f5f7 6px)"></i>Not checked yet</span>` +
-    `<span><b>~</b> estimate</span><span>◔ some trips unchecked</span>`;
+    `<span><b>~</b> estimate</span><span>◔ some trips unchecked</span>` +
+    `<span><span class="rt" style="margin:0">RT</span> round-trip ticket price</span>`;
 }
 
 $("#view").onclick = e => { const b = e.target.closest("button"); if (!b) return;
