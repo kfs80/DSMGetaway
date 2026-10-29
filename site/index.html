@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- VERSION: v2 link-only support -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -106,7 +107,7 @@ const OVER_COLOR = "#e3e6eb";   // $300 and up
 const AIRLINES = {
   G4: "Allegiant", F9: "Frontier", WN: "Southwest", AA: "American",
   DL: "Delta", UA: "United", SY: "Sun Country", NK: "Spirit",
-  AS: "Alaska", B6: "JetBlue", MX: "Breeze", XP: "Avelo",
+  AS: "Alaska", B6: "JetBlue", MX: "Breeze", XP: "Avelo", LINK: "Link Only"
 };
 const STATES = {
   AL:"Alabama", AZ:"Arizona", CA:"California", CO:"Colorado", DC:"Washington DC", FL:"Florida",
@@ -121,7 +122,7 @@ const store = { get(k) { try { return localStorage.getItem(k); } catch { return 
 const al = c => AIRLINES[c] || c || "?";
 
 // Expand the compact data format written by refresh.py
-const ST = ["live", "estimate", "none", "unchecked"];
+const ST = ["live", "estimate", "none", "unchecked", "link"];
 const ymd = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
 if (G) for (const r of G.routes) {
   // routes.csv city is "City Name ST" -> split off the 2-letter state
@@ -188,10 +189,11 @@ function cells(route, colKey) {
     const k = t[colKey];
     const c = out[k] || (out[k] = { best:null, n:0, unchecked:0, none:0 });
     c.n++;
+    if (t.status === "link") { c.best = t; continue; }
     if (t.status === "unchecked") { c.unchecked++; continue; }
     if (t.status === "none") { c.none++; continue; }
     t.p = price(t);
-    if (!c.best || t.p.pp < c.best.p.pp) c.best = t;
+    if (!c.best || !c.best.p || t.p.pp < c.best.p.pp) c.best = t;
   }
   return out;
 }
@@ -201,10 +203,10 @@ function render() {
   const cols = [...new Set(G.routes.flatMap(r => r.trips.map(t => t[colKey])))].sort();
   let rows = G.routes.map(r => ({ r, c: cells(r, colKey) }));
   rows.forEach(x => {
-    const ps = Object.values(x.c).filter(c => c.best).map(c => c.best.p.pp);
+    const ps = Object.values(x.c).filter(c => c.best && c.best.p).map(c => c.best.p.pp);
     x.min = ps.length ? Math.min(...ps) : Infinity;
   });
-  const names = r => r.airlines.map(al).join(", ");
+  const names = r => r.airlines.filter(a => a !== "LINK").map(al).join(", ");
   const byCity = (a,b) => a.r.cityName.localeCompare(b.r.cityName);
   if (state.sort === "cheap") rows.sort((a,b) => a.min - b.min);
   else if (state.sort === "airline") rows.sort((a,b) => names(a.r).localeCompare(names(b.r)) || byCity(a,b));
@@ -226,12 +228,24 @@ function render() {
       lastState = r.stateName;
       html += `<tr class="state"><th>${r.stateName}</th><td colspan="${cols.length}"></td></tr>`;
     }
+    const alNames = names(r);
     html += `<tr><th><span class="city">${r.cityName}</span>` +
       `<span class="meta">${r.code}${state.sort !== "state" && r.state ? " · " + r.state : ""}${r.seasonal ? " · seasonal" : ""}</span>` +
-      `<span class="meta">${names(r)}</span></th>`;
+      `<span class="meta">${alNames ? alNames : "External"}</span></th>`;
+    
     for (const k of cols) {
       const c = x.c[k];
       if (!c) { html += `<td class="none"></td>`; continue; }
+      
+      if (c.best && c.best.status === "link") {
+        html += `<td class="link-only" style="background:#f4f5f7" data-r="${r.code}" data-k="${k}">
+          <a href="${bookingUrl(r.code, c.best)}" target="_blank" rel="noopener">
+          <div class="p" style="color:#5a6172; font-size:13px; font-weight:600; margin-top:10px">Check</div>
+          <div class="al" style="color:#a0a6b5; font-weight:400">Google Flights</div>
+          </a></td>`;
+        continue;
+      }
+      
       if (!c.best) {
         const cls = c.unchecked ? "unchecked" : "none";
         html += `<td class="${cls}"><div class="c"><span class="tag">${c.unchecked ? "not checked" : "no nonstop"}</span></div></td>`;
@@ -260,6 +274,15 @@ function tip(e, rows) {
   const td = e.target.closest("td[data-r]"), el = $("#tip");
   if (!td) { el.style.display = "none"; return; }
   const x = rows.find(x => x.r.code === td.dataset.r), c = x.c[td.dataset.k], t = c.best;
+  
+  if (t.status === "link") {
+      el.innerHTML = `<b>Des Moines ⇄ ${x.r.cityName}</b> (${x.r.code})<br>${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br><br><i>We don't track prices for this route.<br>Click to check Google Flights.</i>`;
+      el.style.display = "block";
+      el.style.left = Math.min(e.clientX + 14, innerWidth - 340) + "px";
+      el.style.top = Math.min(e.clientY + 14, innerHeight - 230) + "px";
+      return;
+  }
+  
   const p = t.p;
   el.innerHTML = `<b>Des Moines ⇄ ${x.r.cityName}</b> (${x.r.code})<br>${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br>
     ${t.rt
@@ -298,6 +321,7 @@ function legend() {
   $("#legend").innerHTML = BANDS.map(b => `<span><i class="sw" style="background:${b.color}"></i>${b.label}</span>`).join("") +
     `<span><i class="sw" style="background:${OVER_COLOR}"></i>$${BANDS[BANDS.length-1].max + 1}+</span>` +
     `<span><i class="sw" style="background:#fff"></i>No nonstop</span>` +
+    `<span><i class="sw" style="background:#f4f5f7"></i>Link only</span>` +
     `<span><i class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f4f5f7 3px,#f4f5f7 6px)"></i>Not checked yet</span>` +
     `<span><b>~</b> estimate</span><span>◔ some trips unchecked</span>` +
     `<span><span class="rt" style="margin:0">RT</span> round-trip ticket price</span>`;
