@@ -1,0 +1,28 @@
+name: Spot Check Fare
+on:
+  workflow_dispatch:
+    inputs:
+      destination:
+        description: "Destination airport code (e.g., LGA)"
+        required: true
+      depart_date:
+        description: "Depart date (YYYY-MM-DD)"
+        required: true
+      return_date:
+        description: "Return date (YYYY-MM-DD)"
+        required: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - run: pip install -r requirements.txt
+      - name: Run Ignav Spot Check
+        env:
+          IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
+        run: python src/spot_check.py DSM ${{ inputs.destination }} ${{ inputs.depart_date }} ${{ inputs.return_date }}
