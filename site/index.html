@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- VERSION: v4 remove internal scroll -->
+<!-- VERSION: v5 force single scroll -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -19,8 +19,10 @@
   .stats { display:flex; flex-wrap:wrap; gap:8px; padding:4px 20px 10px; }
   .chip { background:#fff; border:1px solid var(--line); border-radius:999px; padding:4px 10px; font-size:12px; }
   .chip b { font-variant-numeric: tabular-nums; }
-  /* Removed max-height here to allow natural vertical scrolling */
-  .wrap { overflow:auto; margin:0 12px 20px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+  
+  /* Force vertical overflow hidden so only the main window scrolls vertically */
+  .wrap { overflow-x:auto; overflow-y:hidden; margin:0 12px 20px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+  
   table { border-collapse:separate; border-spacing:0; }
   th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); }
   thead th { position:sticky; top:0; background:#fff; z-index:2; padding:8px 6px; font-weight:600; font-size:12px; white-space:nowrap; }
@@ -34,4 +36,274 @@
   td a, td div.c { display:block; padding:5px 6px; color:inherit; text-decoration:none; height:100%; }
   td .p { font-size:15px; font-weight:700; font-variant-numeric: tabular-nums; }
   td .d { font-size:11px; }
-  td .tag {
+  td .tag { font-size:10px; opacity:.8; }
+  td .al { font-size:11px; font-weight:600; }
+  .rt { display:inline-block; font-size:9px; font-weight:700; padding:0 4px; margin-left:4px; border-radius:4px; background:#1d2433; color:#fff; vertical-align:1px; }
+  td.none { background:#fff; color:#9aa1b0; }
+  td.unchecked { background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f4f5f7 6px,#f4f5f7 12px); color:#9aa1b0; }
+  td.pricey { color:#5a6172; }
+  td.est .p::after { content:" ~"; font-weight:400; }
+  td.partial .tag::before { content:"◔ "; }
+  .legend { display:flex; align-items:center; gap:4px 10px; font-size:12px; color:var(--mute); flex-wrap:wrap; padding:0 20px 6px; }
+  .legend span { display:inline-flex; align-items:center; gap:4px; }
+  .sw { display:inline-block; width:14px; height:14px; border:1px solid var(--line); border-radius:3px; vertical-align:middle; }
+  
+  .divider { padding: 30px 20px 10px; }
+  .divider h2 { margin: 0 0 4px; font-size: 18px; }
+  .link-wrap { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 20px 30px; }
+  .link-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; background: #fff; text-decoration: none; color: inherit; display: block; min-width: 160px; transition: border-color 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+  .link-card:hover { border-color: #a0a6b5; background: #fafbfc; }
+  .link-card .c { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .link-card .m { font-size: 12px; color: var(--mute); }
+  
+  footer { color:var(--mute); font-size:12px; padding:0 20px 20px; }
+  #tip { position:fixed; pointer-events:none; background:#1d2433; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px; max-width:320px; display:none; z-index:10; }
+  select { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); background:#fff; }
+</style>
+</head>
+<body>
+<header>
+  <h1>✈️ DSM Weekend Getaways</h1>
+  <div class="sub" id="sub"></div>
+</header>
+
+<div class="bar">
+  <span class="seg" id="view">
+    <button data-v="weekend" class="on">By weekend</button>
+    <button data-v="month">By month</button>
+  </span>
+  <label>People
+    <select id="people"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+  </label>
+  <label>Carry-ons / person
+    <select id="carry"><option>0</option><option>1</option><option>2</option></select>
+  </label>
+  <label>Checked bags / person
+    <select id="checked"><option>0</option><option>1</option><option>2</option></select>
+  </label>
+  <label>Sort
+    <select id="sort">
+      <option value="state">State</option>
+      <option value="city">City A–Z</option>
+      <option value="cheap">Cheapest first</option>
+      <option value="airline">Airline</option>
+    </select>
+  </label>
+</div>
+<div class="legend" id="legend"></div>
+<div class="stats" id="stats"></div>
+<div id="err" style="display:none;margin:10px 20px;padding:10px;border-radius:8px;background:#fde8e8;color:#8a1c1c"></div>
+
+<div class="wrap"><table id="grid"></table></div>
+
+<div class="divider">
+  <h2>Other direct flights out of DSM</h2>
+  <div class="sub">Generally more expensive weekend trips. Click to search on Google Flights.</div>
+</div>
+<div class="link-wrap" id="link-grid"></div>
+
+<footer id="foot"></footer>
+<div id="tip"></div>
+
+<script>
+window.onerror = (m, src, line) => { const e = document.getElementById("err");
+  e.style.display = "block"; e.textContent = "Page error: " + m + " (line " + line + "). Try opening the page in Edge or Chrome."; };
+const G = /*GRID_DATA*/null;
+
+// ======================= SETTINGS (edit here) =======================
+const BAG_FEE = 40;     // flat $ per bag, per person, EACH WAY
+// Airlines that charge for a carry-on. Others include one free.
+const CARRY_ON_FEE_AIRLINES = ["G4", "F9", "NK"];   // Allegiant, Frontier, Spirit
+// Color bands: price per person (round trip, incl. bags). Above the last = gray.
+const BANDS = [
+  { max:  99, color:"#a8e0b2", label:"Under $100" },
+  { max: 149, color:"#d6f0d2", label:"$100–149"  },
+  { max: 199, color:"#fbf4c0", label:"$150–199"  },
+  { max: 249, color:"#fde0bb", label:"$200–249"  },
+  { max: 299, color:"#f9c6bf", label:"$250–299"  },
+];
+const OVER_COLOR = "#e3e6eb";   // $300 and up
+// Airline code -> name shown on the page.
+const AIRLINES = {
+  G4: "Allegiant", F9: "Frontier", WN: "Southwest", AA: "American",
+  DL: "Delta", UA: "United", SY: "Sun Country", NK: "Spirit",
+  AS: "Alaska", B6: "JetBlue", MX: "Breeze", XP: "Avelo", LINK: "Link Only"
+};
+const STATES = {
+  AL:"Alabama", AZ:"Arizona", CA:"California", CO:"Colorado", DC:"Washington DC", FL:"Florida",
+  GA:"Georgia", IL:"Illinois", MA:"Massachusetts", MI:"Michigan", MN:"Minnesota", NC:"North Carolina",
+  NJ:"New Jersey", NV:"Nevada", NY:"New York", OR:"Oregon", PA:"Pennsylvania", SC:"South Carolina",
+  TN:"Tennessee", TX:"Texas", UT:"Utah", WA:"Washington", MO:"Missouri", LA:"Louisiana",
+};
+// ====================================================================
+
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+                set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+const al = c => AIRLINES[c] || c || "?";
+
+// Expand the compact data format written by refresh.py
+const ST = ["live", "estimate", "none", "unchecked", "link"];
+const ymd = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+if (G) for (const r of G.routes) {
+  // routes.csv city is "City Name ST" -> split off the 2-letter state
+  const m = /^(.*\S)\s+([A-Z]{2})$/.exec(r.city.trim());
+  r.cityName = m ? m[1] : r.city;
+  r.state = m ? m[2] : "";
+  r.stateName = STATES[r.state] || r.state || "Other";
+  r.trips = r.t.map(a => {
+    const [y,mo,d] = a[0].split("-").map(Number), dep = new Date(y, mo-1, d);
+    const [y2,m2,d2] = a[1].split("-").map(Number), ret = new Date(y2, m2-1, d2);
+    const sat = new Date(dep); sat.setDate(dep.getDate() + (6 - dep.getDay() + 7) % 7);
+    const t = { dep:a[0], ret:a[1], status:ST[a[2]], days:Math.round((ret-dep)/864e5)+1,
+                month:a[0].slice(0,7), weekend:ymd(sat) };
+    if (a.length > 3) Object.assign(t, { checked:a[7],
+      out:{ airline:a[8], flight:a[9], depart_time:a[10], price:a[11] },
+      in:{ airline:a[12], flight:a[13], depart_time:a[14], price:a[15] }, rt:a[16] === 1 });
+    return t;
+  });
+  delete r.t;
+}
+const $ = s => document.querySelector(s);
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const dt = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const short = s => { const d = dt(s); return `${WD[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`; };
+const money = n => "$" + Math.round(n).toLocaleString();
+const time12 = t => { if (!t) return ""; const [h,m] = t.split(":").map(Number);
+  return ` ${(h % 12) || 12}:${String(m).padStart(2,"0")} ${h < 12 ? "AM" : "PM"}`; };
+const num = (v, d) => { const n = Number(v); return v !== null && v !== "" && Number.isFinite(n) ? n : d; };
+
+let state = {
+  view: "weekend",
+  sort: store.get("dsmSort") || "state",
+  people:  num(store.get("dsmPeople"), 1),
+  carry:   num(store.get("dsmCarry"), 0),
+  checked: num(store.get("dsmChecked"), 0),
+};
+
+function bagsOneWay(airline) {
+  const carry = CARRY_ON_FEE_AIRLINES.includes(airline) ? state.carry : 0;
+  return (carry + state.checked) * BAG_FEE;
+}
+function price(t) {
+  const bags = bagsOneWay(t.out.airline) + bagsOneWay(t.in.airline);
+  const fare = t.out.price + t.in.price;
+  const pp = fare + bags;
+  return { fare, bags, pp, total: pp * state.people };
+}
+const overMax = pp => pp > BANDS[BANDS.length - 1].max;
+function bandColor(pp) {
+  for (const b of BANDS) if (pp <= b.max) return b.color;
+  return OVER_COLOR;
+}
+
+function bookingUrl(code, t) {
+  return `https://www.google.com/travel/flights?q=${encodeURIComponent(
+    `nonstop flights from ${G.origin} to${code} on ${t.dep} through${t.ret}`)}`;
+}
+
+// Group a route's trips into columns; keep the cheapest priced trip per column.
+function cells(route, colKey) {
+  const out = {};
+  for (const t of route.trips) {
+    const k = t[colKey];
+    const c = out[k] || (out[k] = { best:null, n:0, unchecked:0, none:0 });
+    c.n++;
+    if (t.status === "unchecked") { c.unchecked++; continue; }
+    if (t.status === "none") { c.none++; continue; }
+    t.p = price(t);
+    if (!c.best || !c.best.p || t.p.pp < c.best.p.pp) c.best = t;
+  }
+  return out;
+}
+
+function render() {
+  // Split routes into tracked (top grid) and link-only (bottom section)
+  const trackedRoutes = G.routes.filter(r => !r.airlines.includes("LINK"));
+  const linkRoutes = G.routes.filter(r => r.airlines.includes("LINK"));
+
+  const colKey = state.view;
+  const cols = [...new Set(trackedRoutes.flatMap(r => r.trips.map(t => t[colKey])))].sort();
+  let rows = trackedRoutes.map(r => ({ r, c: cells(r, colKey) }));
+  rows.forEach(x => {
+    const ps = Object.values(x.c).filter(c => c.best && c.best.p).map(c => c.best.p.pp);
+    x.min = ps.length ? Math.min(...ps) : Infinity;
+  });
+  
+  const names = r => r.airlines.map(al).join(", ");
+  const byCity = (a,b) => a.r.cityName.localeCompare(b.r.cityName);
+  if (state.sort === "cheap") rows.sort((a,b) => a.min - b.min);
+  else if (state.sort === "airline") rows.sort((a,b) => names(a.r).localeCompare(names(b.r)) || byCity(a,b));
+  else if (state.sort === "city") rows.sort(byCity);
+  else rows.sort((a,b) => a.r.stateName.localeCompare(b.r.stateName) || byCity(a,b));
+
+  const head = cols.map(k => {
+    if (colKey === "month") { const d = dt(k + "-01"); return `<th>${MON[d.getMonth()]} ${d.getFullYear()}</th>`; }
+    const d = dt(k); return `<th>Wknd of<br>${MON[d.getMonth()]} ${d.getDate()}</th>`;
+  }).join("");
+  let html = `<thead><tr><th>Destination</th>${head}</tr></thead><tbody>`;
+  const showTotal = state.people > 1;
+  const hasBags = state.carry > 0 || state.checked > 0;
+  let lastState = null;
+
+  // Build the Main Tracking Grid
+  for (const x of rows) {
+    const r = x.r;
+    if (state.sort === "state" && r.stateName !== lastState) {
+      lastState = r.stateName;
+      html += `<tr class="state"><th>${r.stateName}</th><td colspan="${cols.length}"></td></tr>`;
+    }
+    const alNames = names(r);
+    html += `<tr><th><span class="city">${r.cityName}</span>` +
+      `<span class="meta">${r.code}${state.sort !== "state" && r.state ? " · " + r.state : ""}${r.seasonal ? " · seasonal" : ""}</span>` +
+      `<span class="meta">${alNames}</span></th>`;
+    
+    for (const k of cols) {
+      const c = x.c[k];
+      if (!c) { html += `<td class="none"></td>`; continue; }
+      
+      if (!c.best) {
+        const cls = c.unchecked ? "unchecked" : "none";
+        html += `<td class="${cls}"><div class="c"><span class="tag">${c.unchecked ? "not checked" : "no nonstop"}</span></div></td>`;
+        continue;
+      }
+      const t = c.best;
+      const cls = [t.status === "estimate" ? "est" : "", c.unchecked ? "partial" : "", overMax(t.p.pp) ? "pricey" : ""].join(" ");
+      const airline = t.out.airline === t.in.airline ? al(t.out.airline) : `${al(t.out.airline)} / ${al(t.in.airline)}`;
+      const tag = `${showTotal ? money(t.p.total) + " total · " : ""}${t.days} days`;
+      html += `<td class="${cls}" style="background:${bandColor(t.p.pp)}" data-r="${r.code}" data-k="${k}">
+        <a href="${bookingUrl(r.code, t)}" target="_blank" rel="noopener">
+        <div class="p">${money(t.p.pp)}<span style="font-size:11px;font-weight:400"> pp${hasBags ? " w/ bags" : ""}</span></div>
+        <div class="al">${airline}${t.rt ? '<span class="rt">RT</span>' : ''}</div>
+        <div class="d">${short(t.dep)} – ${short(t.ret)}</div>
+        <div class="tag">${tag}</div></a></td>`;
+    }
+    html += "</tr>";
+  }
+  $("#grid").innerHTML = html + "</tbody>";
+  $("#grid").onmousemove = e => tip(e, rows);
+  $("#grid").onmouseleave = () => $("#tip").style.display = "none";
+  
+  // Build the Static Link Section
+  linkRoutes.sort((a,b) => a.cityName.localeCompare(b.cityName));
+  let linkHtml = "";
+  for (const r of linkRoutes) {
+    const searchUrl = `https://www.google.com/travel/flights?q=${encodeURIComponent('nonstop flights from ' + G.origin + ' to ' + r.code)}`;
+    linkHtml += `<a href="${searchUrl}" target="_blank" rel="noopener" class="link-card">
+      <div class="c">${r.cityName}</div>
+      <div class="m">${r.code} · ${r.stateName}</div>
+    </a>`;
+  }
+  $("#link-grid").innerHTML = linkHtml;
+
+  header();
+}
+
+function tip(e, rows) {
+  const td = e.target.closest("td[data-r]"), el = $("#tip");
+  if (!td) { el.style.display = "none"; return; }
+  const x = rows.find(x => x.r.code === td.dataset.r), c = x.c[td.dataset.k], t = c.best;
+  const p = t.p;
+  el.innerHTML = `<b>Des Moines ⇄ ${x.r.cityName}</b> (${x.r.code})<br>${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br>
+    ${t.rt
+      ? `${al(t.out.
