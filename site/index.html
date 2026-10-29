@@ -199,7 +199,7 @@ function bandColor(pp) {
 
 function bookingUrl(code, t) {
   return `https://www.google.com/travel/flights?q=${encodeURIComponent(
-    `nonstop flights from ${G.origin} to${code} on ${t.dep} through${t.ret}`)}`;
+    `nonstop flights from ${G.origin} to ${code} on ${t.dep} through ${t.ret}`)}`;
 }
 
 // Group a route's trips into columns; keep the cheapest priced trip per column.
@@ -306,4 +306,58 @@ function tip(e, rows) {
   const p = t.p;
   el.innerHTML = `<b>Des Moines ⇄ ${x.r.cityName}</b> (${x.r.code})<br>${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br>
     ${t.rt
-      ? `${al(t.out.
+      ? `${al(t.out.airline)} round-trip ticket${t.out.depart_time ? " · out" + time12(t.out.depart_time) : ""} — ${money(t.out.price)}<br><i>Priced as one round-trip ticket (cheaper than two one-ways on this airline)</i><br>`
+      : `Out: ${al(t.out.airline)}${time12(t.out.depart_time)} — ${money(t.out.price)}<br>
+    Back: ${al(t.in.airline)}${time12(t.in.depart_time)} — ${money(t.in.price)}<br>
+    ${t.out.airline !== t.in.airline ? "<i>Two airlines: book as two one-way tickets</i><br>" : ""}`}
+    Fare ${money(p.fare)}${p.bags ? ` + bags ${money(p.bags)}` : ""} = <b>${money(p.pp)} per person</b><br>
+    ${state.people > 1 ? `× ${state.people} people = <b>${money(p.total)}</b><br>` : ""}
+    ${t.status === "live" ? "Live" : "Estimate / stale"} · checked ${t.checked}<br>
+    Trip options priced: ${c.n - c.unchecked - c.none} of ${c.n}${c.unchecked ? ` (${c.unchecked} not checked)` : ""}<br>
+    <i>Click to open in Google Flights</i>`;
+  el.style.display = "block";
+  el.style.left = Math.min(e.clientX + 14, innerWidth - 340) + "px";
+  el.style.top = Math.min(e.clientY + 14, innerHeight - 230) + "px";
+}
+
+function header() {
+  const s = G.settings, n = G.trip_counts, tot = Object.values(n).reduce((a,b)=>a+b,0);
+  const pct = k => tot ? Math.round(100 * (n[k]||0) / tot) : 0;
+  const bagTxt = [state.carry ? `${state.carry} carry-on` : "", state.checked ? `${state.checked} checked bag${state.checked > 1 ? "s" : ""}` : ""].filter(Boolean).join(" + ");
+  $("#sub").textContent = `Cheapest nonstop ${s.min_days}–${s.max_days} day trips · leave ${s.depart.join("/")}, return ${s.return.join("/")} · ` +
+    `price per person, round trip${bagTxt ? ", incl. " + bagTxt + " each" : ""} · ${state.people} ${state.people > 1 ? "people" : "person"} · next ${s.lookahead_days} days`;
+  $("#stats").innerHTML = [
+    `Updated <b>${new Date(G.generated).toLocaleString()}</b>`,
+    `Priced live <b>${pct("live")}%</b>`, `Estimate/stale <b>${pct("estimate")}%</b>`,
+    `No nonstop <b>${pct("none")}%</b>`, `Not checked <b>${pct("unchecked")}%</b>`,
+    G.run && G.run.attempted ? `Last run: ${G.run.ok} prices found, ${G.run.failed} failed, ${G.run.remaining} still queued` : "",
+  ].filter(Boolean).map(h => `<span class="chip">${h}</span>`).join("");
+  $("#foot").textContent = `Prices are base fares found by automated search and can change at any time. Confirm on the airline site before booking. ` +
+    `Bags are estimated at a flat ${money(BAG_FEE)} per bag each way. Carry-on fees are added only for ${CARRY_ON_FEE_AIRLINES.map(al).join(", ")}; other airlines include a carry-on. ` +
+    `${(G.rt_airlines || []).map(al).join(", ")} prices marked RT are real round-trip fares; all others are two one-way fares added together.`;
+}
+
+function legend() {
+  $("#legend").innerHTML = BANDS.map(b => `<span><i class="sw" style="background:${b.color}"></i>${b.label}</span>`).join("") +
+    `<span><i class="sw" style="background:${OVER_COLOR}"></i>$${BANDS[BANDS.length-1].max + 1}+</span>` +
+    `<span><i class="sw" style="background:#fff"></i>No nonstop</span>` +
+    `<span><i class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f4f5f7 3px,#f4f5f7 6px)"></i>Not checked yet</span>` +
+    `<span><b>~</b> estimate</span><span>◔ some trips unchecked</span>` +
+    `<span><span class="rt" style="margin:0">RT</span> round-trip ticket price</span>`;
+}
+
+$("#view").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+  $("#view").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); state.view = b.dataset.v; render(); };
+for (const [id, k, sk] of [["#people","people","dsmPeople"],["#carry","carry","dsmCarry"],["#checked","checked","dsmChecked"]]) {
+  $(id).value = String(state[k]);
+  $(id).onchange = e => { state[k] = Number(e.target.value); store.set(sk, state[k]); render(); };
+}
+$("#sort").value = state.sort;
+$("#sort").onchange = e => { state.sort = e.target.value; store.set("dsmSort", state.sort); render(); };
+
+legend();
+if (G) render();
+else $("#sub").textContent = "No data yet - run the refresh workflow.";
+</script>
+</body>
+</html>
