@@ -1,5 +1,6 @@
 """
 DSM Weekend Getaway Finder - refresh job.
+VERSION: v2 link-only support
 
   python src/refresh.py              # look up missing/stale fares, rebuild grid
   python src/refresh.py --build-only # rebuild grid from cached fares, no lookups
@@ -94,12 +95,7 @@ def is_fresh(entry, travel_day, cfg, today):
 
 
 def learned_no_fly(cache, cfg, today):
-    """{(origin, dest, weekday, 'YYYY-MM')} patterns with no nonstop.
-
-    Learned per calendar month so seasonal routes (e.g. Florida in winter
-    only) are not marked "no flights" for the whole 6-month window just
-    because they don't fly this month.
-    """
+    """{(origin, dest, weekday, 'YYYY-MM')} patterns with no nonstop."""
     n = cfg["data"].get("learn_no_flight_after", 0)
     if not n:
         return set()
@@ -131,6 +127,8 @@ def needed_lookups(cfg, routes, trips, learned):
     o = cfg["origin"]
     legs = {}
     for r in routes:
+        if "LINK" in r["airlines"]:
+            continue  # Skip lookups for link-only routes
         for d, ret in trips:
             for a, b, day in ((o, r["code"], d), (r["code"], o, ret)):
                 if not skip_day(r, a, b, day, learned):
@@ -238,7 +236,18 @@ def build_grid(cfg, routes, trips, cache, today, stats):
     rows = []
     for r in routes:
         trips_out = []
+        is_link = "LINK" in r["airlines"]
         for d, ret in trips:
+            if is_link:
+                trips_out.append({
+                    "dep": d.isoformat(), "ret": ret.isoformat(), "status": "link",
+                    "per_person": 0, "total": 0, "bags": 0, "bag_fee_known": False,
+                    "out": {"price": 0, "airline": "LINK", "flight": "", "depart_time": None},
+                    "in": {"price": 0, "airline": "LINK", "flight": "", "depart_time": None},
+                    "checked": today.isoformat()
+                })
+                continue
+
             out, inn = cache.get(key(o, r["code"], d)), cache.get(key(r["code"], o, ret))
             skip_o = skip_day(r, o, r["code"], d, learned) and not out
             skip_i = skip_day(r, r["code"], o, ret, learned) and not inn
@@ -298,14 +307,14 @@ def build_grid(cfg, routes, trips, cache, today, stats):
 
 def compact(grid):
     """Small version of the grid for embedding in the web page (~10x smaller)."""
-    S = {"live": 0, "estimate": 1, "none": 2, "unchecked": 3}
+    S = {"live": 0, "estimate": 1, "none": 2, "unchecked": 3, "link": 4}
     g = {k: v for k, v in grid.items() if k != "routes"}
     g["routes"] = []
     for r in grid["routes"]:
         rows = []
         for t in r["trips"]:
             row = [t["dep"], t["ret"], S[t["status"]]]
-            if "per_person" in t:
+            if "per_person" in t and t["status"] != "link":
                 o, i = t["out"], t["in"]
                 row += [t["per_person"], t["total"], t["bags"], int(t["bag_fee_known"]), t["checked"],
                         o["airline"], o["flight"], o["depart_time"], o["price"],
