@@ -36,7 +36,7 @@ jobs:
           DEST="${{ github.event.inputs.destination }}"
           if [ "${{ github.event_name }}" = "schedule" ] || [ -z "$DEST" ]; then
             echo "Running randomized check..."
-            python src/spot_check.py --random 3
+            python src/spot_check.py --random 5
           else
             echo "Running specific manual check..."
             python src/spot_check.py --dest "$DEST" --dep "${{ github.event.inputs.depart_date }}" --ret "${{ github.event.inputs.return_date }}"
