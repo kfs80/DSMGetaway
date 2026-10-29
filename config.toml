@@ -43,7 +43,7 @@ max_minutes_per_run      = 50    # stop looking up after this, then save + publi
 pause_seconds            = 1.5   # be polite between lookups
 
 # How long a price stays "Live" before it is re-checked.
-fresh_days_near  = 14    # trips within near_window_days
+fresh_days_near  = 5    # trips within near_window_days
 fresh_days_far   = 30
 near_window_days = 60
 
