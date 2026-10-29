@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- VERSION: v2 link-only support -->
+<!-- VERSION: v3 layout split -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -44,6 +44,16 @@
   .legend { display:flex; align-items:center; gap:4px 10px; font-size:12px; color:var(--mute); flex-wrap:wrap; padding:0 20px 6px; }
   .legend span { display:inline-flex; align-items:center; gap:4px; }
   .sw { display:inline-block; width:14px; height:14px; border:1px solid var(--line); border-radius:3px; vertical-align:middle; }
+  
+  /* New styles for the divider and link section */
+  .divider { padding: 30px 20px 10px; }
+  .divider h2 { margin: 0 0 4px; font-size: 18px; }
+  .link-wrap { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 20px 30px; }
+  .link-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; background: #fff; text-decoration: none; color: inherit; display: block; min-width: 160px; transition: border-color 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+  .link-card:hover { border-color: #a0a6b5; background: #fafbfc; }
+  .link-card .c { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .link-card .m { font-size: 12px; color: var(--mute); }
+  
   footer { color:var(--mute); font-size:12px; padding:0 20px 20px; }
   #tip { position:fixed; pointer-events:none; background:#1d2433; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px; max-width:320px; display:none; z-index:10; }
   select { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); background:#fff; }
@@ -81,7 +91,15 @@
 <div class="legend" id="legend"></div>
 <div class="stats" id="stats"></div>
 <div id="err" style="display:none;margin:10px 20px;padding:10px;border-radius:8px;background:#fde8e8;color:#8a1c1c"></div>
+
 <div class="wrap"><table id="grid"></table></div>
+
+<div class="divider">
+  <h2>Other direct flights out of DSM</h2>
+  <div class="sub">Generally more expensive weekend trips. Click to search on Google Flights.</div>
+</div>
+<div class="link-wrap" id="link-grid"></div>
+
 <footer id="foot"></footer>
 <div id="tip"></div>
 
@@ -189,7 +207,6 @@ function cells(route, colKey) {
     const k = t[colKey];
     const c = out[k] || (out[k] = { best:null, n:0, unchecked:0, none:0 });
     c.n++;
-    if (t.status === "link") { c.best = t; continue; }
     if (t.status === "unchecked") { c.unchecked++; continue; }
     if (t.status === "none") { c.none++; continue; }
     t.p = price(t);
@@ -199,14 +216,19 @@ function cells(route, colKey) {
 }
 
 function render() {
+  // Split routes into tracked (top grid) and link-only (bottom section)
+  const trackedRoutes = G.routes.filter(r => !r.airlines.includes("LINK"));
+  const linkRoutes = G.routes.filter(r => r.airlines.includes("LINK"));
+
   const colKey = state.view;
-  const cols = [...new Set(G.routes.flatMap(r => r.trips.map(t => t[colKey])))].sort();
-  let rows = G.routes.map(r => ({ r, c: cells(r, colKey) }));
+  const cols = [...new Set(trackedRoutes.flatMap(r => r.trips.map(t => t[colKey])))].sort();
+  let rows = trackedRoutes.map(r => ({ r, c: cells(r, colKey) }));
   rows.forEach(x => {
     const ps = Object.values(x.c).filter(c => c.best && c.best.p).map(c => c.best.p.pp);
     x.min = ps.length ? Math.min(...ps) : Infinity;
   });
-  const names = r => r.airlines.filter(a => a !== "LINK").map(al).join(", ");
+  
+  const names = r => r.airlines.map(al).join(", ");
   const byCity = (a,b) => a.r.cityName.localeCompare(b.r.cityName);
   if (state.sort === "cheap") rows.sort((a,b) => a.min - b.min);
   else if (state.sort === "airline") rows.sort((a,b) => names(a.r).localeCompare(names(b.r)) || byCity(a,b));
@@ -222,6 +244,7 @@ function render() {
   const hasBags = state.carry > 0 || state.checked > 0;
   let lastState = null;
 
+  // Build the Main Tracking Grid
   for (const x of rows) {
     const r = x.r;
     if (state.sort === "state" && r.stateName !== lastState) {
@@ -231,20 +254,11 @@ function render() {
     const alNames = names(r);
     html += `<tr><th><span class="city">${r.cityName}</span>` +
       `<span class="meta">${r.code}${state.sort !== "state" && r.state ? " · " + r.state : ""}${r.seasonal ? " · seasonal" : ""}</span>` +
-      `<span class="meta">${alNames ? alNames : "External"}</span></th>`;
+      `<span class="meta">${alNames}</span></th>`;
     
     for (const k of cols) {
       const c = x.c[k];
       if (!c) { html += `<td class="none"></td>`; continue; }
-      
-      if (c.best && c.best.status === "link") {
-        html += `<td class="link-only" style="background:#f4f5f7" data-r="${r.code}" data-k="${k}">
-          <a href="${bookingUrl(r.code, c.best)}" target="_blank" rel="noopener">
-          <div class="p" style="color:#5a6172; font-size:13px; font-weight:600; margin-top:10px">Check</div>
-          <div class="al" style="color:#a0a6b5; font-weight:400">Google Flights</div>
-          </a></td>`;
-        continue;
-      }
       
       if (!c.best) {
         const cls = c.unchecked ? "unchecked" : "none";
@@ -267,6 +281,19 @@ function render() {
   $("#grid").innerHTML = html + "</tbody>";
   $("#grid").onmousemove = e => tip(e, rows);
   $("#grid").onmouseleave = () => $("#tip").style.display = "none";
+  
+  // Build the Static Link Section
+  linkRoutes.sort((a,b) => a.cityName.localeCompare(b.cityName));
+  let linkHtml = "";
+  for (const r of linkRoutes) {
+    const searchUrl = `https://www.google.com/travel/flights?q=${encodeURIComponent('nonstop flights from ' + G.origin + ' to ' + r.code)}`;
+    linkHtml += `<a href="${searchUrl}" target="_blank" rel="noopener" class="link-card">
+      <div class="c">${r.cityName}</div>
+      <div class="m">${r.code} · ${r.stateName}</div>
+    </a>`;
+  }
+  $("#link-grid").innerHTML = linkHtml;
+
   header();
 }
 
@@ -274,15 +301,6 @@ function tip(e, rows) {
   const td = e.target.closest("td[data-r]"), el = $("#tip");
   if (!td) { el.style.display = "none"; return; }
   const x = rows.find(x => x.r.code === td.dataset.r), c = x.c[td.dataset.k], t = c.best;
-  
-  if (t.status === "link") {
-      el.innerHTML = `<b>Des Moines ⇄ ${x.r.cityName}</b> (${x.r.code})<br>${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br><br><i>We don't track prices for this route.<br>Click to check Google Flights.</i>`;
-      el.style.display = "block";
-      el.style.left = Math.min(e.clientX + 14, innerWidth - 340) + "px";
-      el.style.top = Math.min(e.clientY + 14, innerHeight - 230) + "px";
-      return;
-  }
-  
   const p = t.p;
   el.innerHTML = `<b>Des Moines ⇄ ${x.r.cityName}</b> (${x.r.code})<br>${short(t.dep)} – ${short(t.ret)} (${t.days} days)<br>
     ${t.rt
@@ -321,7 +339,6 @@ function legend() {
   $("#legend").innerHTML = BANDS.map(b => `<span><i class="sw" style="background:${b.color}"></i>${b.label}</span>`).join("") +
     `<span><i class="sw" style="background:${OVER_COLOR}"></i>$${BANDS[BANDS.length-1].max + 1}+</span>` +
     `<span><i class="sw" style="background:#fff"></i>No nonstop</span>` +
-    `<span><i class="sw" style="background:#f4f5f7"></i>Link only</span>` +
     `<span><i class="sw" style="background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f4f5f7 3px,#f4f5f7 6px)"></i>Not checked yet</span>` +
     `<span><b>~</b> estimate</span><span>◔ some trips unchecked</span>` +
     `<span><span class="rt" style="margin:0">RT</span> round-trip ticket price</span>`;
