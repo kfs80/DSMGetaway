@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- VERSION: v6 bulletproof error handling & scroll fix -->
+<!-- VERSION: v7 page-level horizontal scroll -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -20,8 +20,8 @@
   .chip { background:#fff; border:1px solid var(--line); border-radius:999px; padding:4px 10px; font-size:12px; }
   .chip b { font-variant-numeric: tabular-nums; }
   
-  /* Natural height so no internal vertical scrollbar ever appears */
-  .wrap { overflow-x:auto; margin:0 12px 20px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+  /* Natural width so horizontal scroll is at the page level */
+  .wrap { margin:0 12px 20px; border:1px solid var(--line); border-radius:10px; background:#fff; width: max-content; min-width: calc(100% - 24px); }
   
   table { border-collapse:separate; border-spacing:0; }
   th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); }
