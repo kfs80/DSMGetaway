@@ -1,20 +1,27 @@
 name: Spot Check Fare
 on:
+  schedule:
+    - cron: '0 15 * * *'  # Runs automatically every day at 10 AM Central Time (15:00 UTC)
   workflow_dispatch:
     inputs:
       destination:
-        description: "Destination airport code (e.g., LGA)"
-        required: true
+        description: "Airport code (e.g. LGA). Leave blank for RANDOM."
+        required: false
+        default: ""
       depart_date:
-        description: "Depart date (YYYY-MM-DD)"
-        required: true
+        description: "Depart date (YYYY-MM-DD). Leave blank if RANDOM."
+        required: false
+        default: ""
       return_date:
-        description: "Return date (YYYY-MM-DD)"
-        required: true
+        description: "Return date (YYYY-MM-DD). Leave blank if RANDOM."
+        required: false
+        default: ""
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,7 +29,22 @@ jobs:
           python-version: "3.11"
           cache: "pip"
       - run: pip install -r requirements.txt
-      - name: Run Ignav Spot Check
+      - name: Run Spot Check & Compare
         env:
           IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
-        run: python src/spot_check.py DSM ${{ inputs.destination }} ${{ inputs.depart_date }} ${{ inputs.return_date }}
+        run: |
+          DEST="${{ github.event.inputs.destination }}"
+          if [ "${{ github.event_name }}" = "schedule" ] || [ -z "$DEST" ]; then
+            echo "Running randomized check..."
+            python src/spot_check.py --random 3
+          else
+            echo "Running specific manual check..."
+            python src/spot_check.py --dest "$DEST" --dep "${{ github.event.inputs.depart_date }}" --ret "${{ github.event.inputs.return_date }}"
+          fi
+      - name: Commit Log File
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/spot_check_log.csv
+          git commit -m "Update spot check log" || echo "No changes to commit"
+          git push
