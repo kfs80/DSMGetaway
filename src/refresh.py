@@ -1,9 +1,10 @@
 """
 DSM Weekend Getaway Finder - refresh job.
-VERSION: v2 link-only support
+VERSION: v3 allegiant fallback & no-fly fix
 
   python src/refresh.py              # look up missing/stale fares, rebuild grid
   python src/refresh.py --build-only # rebuild grid from cached fares, no lookups
+  python src/refresh.py --recheck-g4 # purge cached null G4 fares before lookup
   python src/refresh.py --mock       # use fake prices (site testing)
 
 Approach: price ONE-WAY nonstop fares per date (outbound Wed/Thu/Fri, return
@@ -94,11 +95,12 @@ def is_fresh(entry, travel_day, cfg, today):
     return age < (dc["fresh_days_near"] if near else dc["fresh_days_far"])
 
 
-def learned_no_fly(cache, cfg, today):
+def learned_no_fly(cache, cfg, today, g4_codes=None):
     """{(origin, dest, weekday, 'YYYY-MM')} patterns with no nonstop."""
     n = cfg["data"].get("learn_no_flight_after", 0)
     if not n:
         return set()
+    g4_codes = g4_codes or set()
     seen = {}
     for k, v in cache.items():
         if k.startswith("RT|"):          # round-trip entries, not one-way legs
@@ -111,7 +113,8 @@ def learned_no_fly(cache, cfg, today):
     out = set()
     for pat, (none, priced, last) in seen.items():
         recent = (today - date.fromisoformat(last)).days < 30
-        if none >= n and priced == 0 and recent:
+        threshold = max(n, 6) if (pat[0] in g4_codes or pat[1] in g4_codes) else n
+        if none >= threshold and priced == 0 and recent:
             out.add(pat)
     return out
 
@@ -138,7 +141,8 @@ def needed_lookups(cfg, routes, trips, learned):
 
 # ---------------------------------------------------------------- fetch
 def fetch(cfg, routes, trips, cache, today, provider_names):
-    learned = learned_no_fly(cache, cfg, today)
+    g4_codes = {r["code"] for r in routes if "G4" in r["airlines"]}
+    learned = learned_no_fly(cache, cfg, today, g4_codes)
     legs = needed_lookups(cfg, routes, trips, learned)
     todo = [(k, *v) for k, v in legs.items() if not is_fresh(cache.get(k), v[2], cfg, today)]
     todo.sort(key=lambda x: (x[0] in cache, x[3]))   # missing first, soonest first
@@ -180,14 +184,20 @@ def fetch(cfg, routes, trips, cache, today, provider_names):
             stop_reason = f"hit max_minutes_per_run ({dc.get('max_minutes_per_run', 50)})"
             break
 
-        for p in usable:
+        is_g4 = "G4" in route["airlines"]
+        for idx, p in enumerate(usable):
             used += 1
             paid_used += p.is_paid
             try:
                 fare = p.cheapest_nonstop(a, b, day.isoformat(), route["airlines"])
-                cache[k] = {**fare.to_dict(), "checked": now, "estimate": p.is_estimate}
-                stats["by_provider"][p.name] = stats["by_provider"].get(p.name, 0) + 1
+                entry = {**fare.to_dict(), "checked": now, "estimate": p.is_estimate}
                 errors_in_a_row[p.name] = 0
+                # If free provider returns None on a G4 route, fall back to next provider (e.g., ignav) if available
+                if fare.price is None and is_g4 and not p.is_paid and idx + 1 < len(usable):
+                    cache[k] = entry
+                    continue
+                cache[k] = entry
+                stats["by_provider"][p.name] = stats["by_provider"].get(p.name, 0) + 1
                 ok += 1
                 break
             except QuotaExhausted as e:
@@ -200,7 +210,10 @@ def fetch(cfg, routes, trips, cache, today, provider_names):
                     print(f"  {p.name} failed 15 times in a row - not using it for the rest of this run")
                     dead.add(p.name)
         else:
-            failed += 1
+            if k in cache and cache[k].get("price") is None:
+                ok += 1
+            else:
+                failed += 1
 
         if used and used % 25 == 0:
             save_cache(cache)
@@ -232,7 +245,8 @@ def build_grid(cfg, routes, trips, cache, today, stats):
             return float(fees[airline]) * adults, True
         return 0.0, False
 
-    learned = learned_no_fly(cache, cfg, today)
+    g4_codes = {r["code"] for r in routes if "G4" in r["airlines"]}
+    learned = learned_no_fly(cache, cfg, today, g4_codes)
     rows = []
     for r in routes:
         trips_out = []
@@ -330,6 +344,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--build-only", action="store_true")
     ap.add_argument("--mock", action="store_true")
+    ap.add_argument("--recheck-g4", action="store_true", help="purge cached null G4 entries before lookup")
     ap.add_argument("--today", help="override date (YYYY-MM-DD) for testing")
     args = ap.parse_args()
 
@@ -339,6 +354,15 @@ def main():
     if args.mock:                       # keep fake prices out of the real cache
         CACHE = ROOT / "data" / "fares_mock.json"
     cache = load_cache()
+    if args.recheck_g4:
+        g4_codes = {r["code"] for r in routes if "G4" in r["airlines"]}
+        purged = [k for k, v in cache.items()
+                  if not k.startswith("RT|") and v.get("price") is None
+                  and (k[:3] in g4_codes or k[4:7] in g4_codes)]
+        for k in purged:
+            del cache[k]
+        print(f"Purged {len(purged)} cached null G4 entries")
+
     print(f"{len(routes)} routes x {len(trips)} trip-date pairs")
 
     stats = {"attempted": 0, "ok": 0, "failed": 0, "remaining": None}
