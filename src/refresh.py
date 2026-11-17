@@ -1,6 +1,6 @@
 """
 DSM Weekend Getaway Finder - refresh job.
-VERSION: v3 allegiant fallback & no-fly fix
+VERSION: v4 allegiant unpriced-flight & fallback fix
 
   python src/refresh.py              # look up missing/stale fares, rebuild grid
   python src/refresh.py --build-only # rebuild grid from cached fares, no lookups
@@ -108,13 +108,15 @@ def learned_no_fly(cache, cfg, today, g4_codes=None):
         a, b, ds = k[:3], k[4:7], k[8:]
         d = date.fromisoformat(ds)
         st = seen.setdefault((a, b, d.weekday(), ds[:7]), [0, 0, ""])
-        st[0 if v["price"] is None else 1] += 1
+        # Count as operating if a price was found OR an unpriced carrier was confirmed
+        is_operating = (v["price"] is not None) or bool(v.get("airline"))
+        st[1 if is_operating else 0] += 1
         st[2] = max(st[2], v["checked"][:10])
     out = set()
-    for pat, (none, priced, last) in seen.items():
+    for pat, (none, operating, last) in seen.items():
         recent = (today - date.fromisoformat(last)).days < 30
         threshold = max(n, 6) if (pat[0] in g4_codes or pat[1] in g4_codes) else n
-        if none >= threshold and priced == 0 and recent:
+        if none >= threshold and operating == 0 and recent:
             out.add(pat)
     return out
 
@@ -192,8 +194,9 @@ def fetch(cfg, routes, trips, cache, today, provider_names):
                 fare = p.cheapest_nonstop(a, b, day.isoformat(), route["airlines"])
                 entry = {**fare.to_dict(), "checked": now, "estimate": p.is_estimate}
                 errors_in_a_row[p.name] = 0
-                # If free provider returns None on a G4 route, fall back to next provider (e.g., ignav) if available
-                if fare.price is None and is_g4 and not p.is_paid and idx + 1 < len(usable):
+                # Fall back to next provider (e.g., ignav) if free provider returns None on a G4 route
+                # or detects an unpriced nonstop flight on any route
+                if fare.price is None and (is_g4 or fare.airline) and not p.is_paid and idx + 1 < len(usable):
                     cache[k] = entry
                     continue
                 cache[k] = entry
