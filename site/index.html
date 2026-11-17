@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- VERSION: v7 page-level horizontal scroll -->
+<!-- VERSION: v8 auto-hide empty routes -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -59,6 +59,7 @@
   footer { color:var(--mute); font-size:12px; padding:0 20px 20px; }
   #tip { position:fixed; pointer-events:none; background:#1d2433; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px; max-width:320px; display:none; z-index:10; }
   select { font:inherit; padding:5px; border-radius:6px; border:1px solid var(--line); background:#fff; }
+  .chk { display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none; }
 </style>
 </head>
 <body>
@@ -88,6 +89,10 @@
       <option value="cheap">Cheapest first</option>
       <option value="airline">Airline</option>
     </select>
+  </label>
+  <label class="chk" id="empty-wrap" style="display:none;">
+    <input type="checkbox" id="showEmpty">
+    <span id="empty-label">Show empty routes</span>
   </label>
 </div>
 <div class="legend" id="legend"></div>
@@ -181,9 +186,10 @@ try {
   let state = {
     view: "weekend",
     sort: store.get("dsmSort") || "state",
-    people:  num(store.get("dsmPeople"), 1),
-    carry:   num(store.get("dsmCarry"), 0),
-    checked: num(store.get("dsmChecked"), 0),
+    people:    num(store.get("dsmPeople"), 1),
+    carry:     num(store.get("dsmCarry"), 0),
+    checked:   num(store.get("dsmChecked"), 0),
+    showEmpty: store.get("dsmShowEmpty") === "1",
   };
 
   function bagsOneWay(airline) {
@@ -229,11 +235,22 @@ try {
 
     const colKey = state.view;
     const cols = [...new Set(trackedRoutes.flatMap(r => r.trips.map(t => t[colKey])))].sort();
-    let rows = trackedRoutes.map(r => ({ r, c: cells(r, colKey) }));
-    rows.forEach(x => {
+    let allRows = trackedRoutes.map(r => ({ r, c: cells(r, colKey) }));
+    allRows.forEach(x => {
       const ps = Object.values(x.c).filter(c => c.best && c.best.p).map(c => c.best.p.pp);
       x.min = ps.length ? Math.min(...ps) : Infinity;
     });
+
+    const emptyCount = allRows.filter(x => !Number.isFinite(x.min)).length;
+    const emptyWrap = $("#empty-wrap");
+    if (emptyCount > 0) {
+      emptyWrap.style.display = "inline-flex";
+      $("#empty-label").textContent = `Show empty routes (${emptyCount} hidden)`;
+    } else {
+      emptyWrap.style.display = "none";
+    }
+
+    let rows = state.showEmpty ? allRows : allRows.filter(x => Number.isFinite(x.min));
     
     const names = r => r.airlines.map(al).join(", ");
     const byCity = (a,b) => a.r.cityName.localeCompare(b.r.cityName);
@@ -250,6 +267,10 @@ try {
     const showTotal = state.people > 1;
     const hasBags = state.carry > 0 || state.checked > 0;
     let lastState = null;
+
+    if (rows.length === 0 && emptyCount > 0) {
+      html += `<tr><td colspan="${cols.length + 1}" style="padding:18px;color:var(--mute);">All ${emptyCount} tracked routes currently have no nonstop service in this lookup range. Check "Show empty routes" above to view them.</td></tr>`;
+    }
 
     for (const x of rows) {
       const r = x.r;
@@ -357,6 +378,8 @@ try {
   }
   $("#sort").value = state.sort;
   $("#sort").onchange = e => { state.sort = e.target.value; store.set("dsmSort", state.sort); render(); };
+  $("#showEmpty").checked = state.showEmpty;
+  $("#showEmpty").onchange = e => { state.showEmpty = e.target.checked; store.set("dsmShowEmpty", state.showEmpty ? "1" : "0"); render(); };
 
   legend();
   if (G) render();
