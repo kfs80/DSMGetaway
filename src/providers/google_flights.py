@@ -1,9 +1,11 @@
 """Google Flights via the open-source `fast-flights` library, v3 (free, unofficial).
+VERSION: v4 allegiant & unpriced-flight detection
 
 The library's built-in parser crashes ("'NoneType' object is not subscriptable")
 when Google returns a day with no nonstop flights or a flight without a listed
 price. We use the library only to download the page and parse it ourselves,
-tolerantly: empty results = "no nonstop", bad entries are skipped.
+tolerantly: empty results = "no nonstop", bad entries are skipped, and unpriced
+nonstop flights preserve their carrier code so refresh.py can fall back to ignav.
 """
 import json
 
@@ -14,14 +16,19 @@ AIRLINE_CODES = {
     "southwest": "WN", "frontier": "F9", "sun country": "SY", "spirit": "NK",
     "alaska": "AS", "jetblue": "B6", "breeze": "MX", "avelo": "XP",
 }
+KNOWN_CODES = set(AIRLINE_CODES.values())
 
 
 def _code(name):
-    n = (name or "").lower()
+    raw = (name or "").strip()
+    up = raw.upper()
+    if up in KNOWN_CODES:
+        return up
+    n = raw.lower()
     for k, v in AIRLINE_CODES.items():
         if k in n:
             return v
-    return name or "?"
+    return raw or "?"
 
 
 def _get(obj, *path):
@@ -35,8 +42,10 @@ def _get(obj, *path):
 
 
 def parse_page(html):
-    """Return list of (price, airline_name, n_segments, (hh, mm)) or [] if none."""
+    """Return list of (price_or_None, airline_name_or_code, n_segments, (hh, mm))."""
     from selectolax.lexbor import LexborHTMLParser
+    if "consent.google.com" in html or "/sorry/" in html:
+        raise ProviderError("google_flights: blocked by consent or captcha page")
     script = LexborHTMLParser(html).css_first(r"script.ds\:1")
     if script is None:
         raise ProviderError("google_flights: results page not recognized (blocked or changed)")
@@ -54,15 +63,19 @@ def parse_page(html):
     out = []
     for group in (2, 3):                       # "best" and "other" flight lists
         for k in (_get(payload, group, 0) or []):
-            price = _get(k, 1, 0, 1)
             segs = _get(k, 0, 2) or []
-            if not isinstance(price, (int, float)) or price <= 0 or not segs:
+            if not segs:
                 continue
+            raw_price = _get(k, 1, 0, 1)
+            price = float(raw_price) if isinstance(raw_price, (int, float)) and raw_price > 0 else None
+
             airlines = _get(k, 0, 1) or []
+            carrier_code = _get(k, 0, 0) or _get(segs, 0, 22) or ""
+            airline_label = airlines[0] if airlines else carrier_code
+
             t = _get(segs, 0, 8) or []
             t = [*(t or []), None, None]
-            out.append((float(price), airlines[0] if airlines else "", len(segs),
-                        (t[0] or 0, t[1] or 0)))
+            out.append((price, airline_label, len(segs), (t[0] or 0, t[1] or 0)))
     return out
 
 
@@ -92,11 +105,23 @@ class GoogleFlightsProvider(Provider):
         except Exception as e:
             raise ProviderError(f"google_flights: {type(e).__name__}: {str(e)[:150]}")
 
+        allowed = {a.upper() for a in (airlines or []) if a and a.upper() != "LINK"}
         best = None
+        unpriced_match = None
+
         for price, airline, nsegs, (hh, mm) in parse_page(html):
             if nsegs != 1:                     # nonstop only
                 continue
+            code = _code(airline)
+            if allowed and code not in allowed:
+                continue
+            if price is None:
+                if unpriced_match is None:
+                    unpriced_match = Fare(price=None, airline=code,
+                                          depart_time=f"{hh:02d}:{mm:02d}", source=self.name)
+                continue
             if best is None or price < best.price:
-                best = Fare(price=price, airline=_code(airline),
+                best = Fare(price=price, airline=code,
                             depart_time=f"{hh:02d}:{mm:02d}", source=self.name)
-        return best or Fare(price=None, source=self.name)
+
+        return best or unpriced_match or Fare(price=None, source=self.name)
