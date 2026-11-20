@@ -307,7 +307,7 @@
 },
 "ATL-DSM-2027-01-04": {
 "airline": "DL",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "09:36",
 "estimate": false,
 "flight": null,
@@ -369,12 +369,12 @@
 "source": "google_flights"
 },
 "ATL-DSM-2027-01-19": {
-"airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
-"depart_time": null,
+"airline": "DL",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "09:36",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 309.0,
 "source": "google_flights"
 },
 "ATL-DSM-2027-01-24": {
@@ -1315,12 +1315,12 @@
 },
 "AUS-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "AUS-DSM-2027-01-24": {
 "airline": null,
@@ -2196,12 +2196,12 @@
 "source": "google_flights"
 },
 "AZA-DSM-2027-01-04": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "G4",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "19:21",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 116.0,
 "source": "google_flights"
 },
 "AZA-DSM-2027-01-05": {
@@ -2260,12 +2260,12 @@
 },
 "AZA-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "AZA-DSM-2027-01-24": {
 "airline": null,
@@ -3142,11 +3142,11 @@
 },
 "BNA-DSM-2027-01-04": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "16:44",
 "estimate": false,
 "flight": null,
-"price": 116.0,
+"price": 99.0,
 "source": "google_flights"
 },
 "BNA-DSM-2027-01-05": {
@@ -3205,11 +3205,11 @@
 },
 "BNA-DSM-2027-01-19": {
 "airline": "WN",
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "08:15",
 "estimate": false,
 "flight": null,
-"price": 138.0,
+"price": 137.0,
 "source": "google_flights"
 },
 "BNA-DSM-2027-01-24": {
@@ -4150,12 +4150,12 @@
 },
 "BOS-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "BOS-DSM-2027-01-24": {
 "airline": null,
@@ -5095,12 +5095,12 @@
 },
 "BUR-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "BUR-DSM-2027-01-24": {
 "airline": null,
@@ -7705,11 +7705,11 @@
 },
 "DEN-DSM-2027-01-04": {
 "airline": "WN",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "10:30",
 "estimate": false,
 "flight": null,
-"price": 165.0,
+"price": 154.0,
 "source": "google_flights"
 },
 "DEN-DSM-2027-01-05": {
@@ -7767,12 +7767,12 @@
 "source": "google_flights"
 },
 "DEN-DSM-2027-01-19": {
-"airline": "UA",
-"checked": "2026-11-06T17:47:31+00:00",
-"depart_time": "09:54",
+"airline": null,
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": null,
 "estimate": false,
 "flight": null,
-"price": 140.0,
+"price": null,
 "source": "google_flights"
 },
 "DEN-DSM-2027-01-24": {
@@ -9496,7 +9496,7 @@
 },
 "DSM-ATL-2026-12-25": {
 "airline": "DL",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "16:00",
 "estimate": false,
 "flight": null,
@@ -9504,12 +9504,12 @@
 "source": "google_flights"
 },
 "DSM-ATL-2026-12-30": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "DL",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "05:30",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 309.0,
 "source": "google_flights"
 },
 "DSM-ATL-2026-12-31": {
@@ -9568,7 +9568,7 @@
 },
 "DSM-ATL-2027-01-14": {
 "airline": "DL",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "05:30",
 "estimate": false,
 "flight": null,
@@ -10513,11 +10513,11 @@
 },
 "DSM-AUS-2027-01-14": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "07:45",
 "estimate": false,
 "flight": null,
-"price": 80.0,
+"price": 86.0,
 "source": "google_flights"
 },
 "DSM-AUS-2027-01-15": {
@@ -11386,20 +11386,20 @@
 },
 "DSM-AZA-2026-12-25": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "11:25",
 "estimate": false,
 "flight": null,
-"price": 396.0,
+"price": 269.0,
 "source": "google_flights"
 },
 "DSM-AZA-2026-12-30": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "19:14",
 "estimate": false,
 "flight": null,
-"price": 224.0,
+"price": 244.0,
 "source": "google_flights"
 },
 "DSM-AZA-2026-12-31": {
@@ -12331,12 +12331,12 @@
 },
 "DSM-BNA-2026-12-25": {
 "airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "DSM-BNA-2026-12-30": {
 "airline": "G4",
@@ -12403,11 +12403,11 @@
 },
 "DSM-BNA-2027-01-14": {
 "airline": "WN",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "08:00",
 "estimate": false,
 "flight": null,
-"price": 163.0,
+"price": 167.0,
 "source": "google_flights"
 },
 "DSM-BNA-2027-01-15": {
@@ -16893,21 +16893,21 @@
 "source": "google_flights"
 },
 "DSM-DEN-2026-12-25": {
-"airline": "WN",
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": "07:00",
+"airline": "UA",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "05:30",
 "estimate": false,
 "flight": null,
-"price": 178.0,
+"price": 169.0,
 "source": "google_flights"
 },
 "DSM-DEN-2026-12-30": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "UA",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "05:30",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 185.0,
 "source": "google_flights"
 },
 "DSM-DEN-2026-12-31": {
@@ -16965,12 +16965,12 @@
 "source": "google_flights"
 },
 "DSM-DEN-2027-01-14": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "F9",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "19:43",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 109.0,
 "source": "google_flights"
 },
 "DSM-DEN-2027-01-15": {
@@ -20584,7 +20584,7 @@
 },
 "DSM-FLL-2027-01-14": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "14:09",
 "estimate": false,
 "flight": null,
@@ -25129,20 +25129,20 @@
 },
 "DSM-LAS-2026-12-25": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "16:55",
 "estimate": false,
 "flight": null,
-"price": 226.0,
+"price": 206.0,
 "source": "google_flights"
 },
 "DSM-LAS-2026-12-30": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "20:13",
 "estimate": false,
 "flight": null,
-"price": 156.0,
+"price": 133.0,
 "source": "google_flights"
 },
 "DSM-LAS-2026-12-31": {
@@ -25201,7 +25201,7 @@
 },
 "DSM-LAS-2027-01-14": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "10:00",
 "estimate": false,
 "flight": null,
@@ -28720,20 +28720,20 @@
 },
 "DSM-MDW-2026-12-25": {
 "airline": "WN",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "06:00",
 "estimate": false,
 "flight": null,
-"price": 175.0,
+"price": 159.0,
 "source": "google_flights"
 },
 "DSM-MDW-2026-12-30": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "WN",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "05:10",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 129.0,
 "source": "google_flights"
 },
 "DSM-MDW-2026-12-31": {
@@ -28792,11 +28792,11 @@
 },
 "DSM-MDW-2027-01-14": {
 "airline": "WN",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "15:00",
 "estimate": false,
 "flight": null,
-"price": 155.0,
+"price": 144.0,
 "source": "google_flights"
 },
 "DSM-MDW-2027-01-15": {
@@ -29665,7 +29665,7 @@
 },
 "DSM-MIA-2026-12-25": {
 "airline": "AA",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "06:00",
 "estimate": false,
 "flight": null,
@@ -29674,11 +29674,11 @@
 },
 "DSM-MIA-2026-12-30": {
 "airline": "AA",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "06:00",
 "estimate": false,
 "flight": null,
-"price": 245.0,
+"price": 549.0,
 "source": "google_flights"
 },
 "DSM-MIA-2026-12-31": {
@@ -29736,12 +29736,12 @@
 "source": "ignav"
 },
 "DSM-MIA-2027-01-14": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "AA",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "05:14",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 710.0,
 "source": "google_flights"
 },
 "DSM-MIA-2027-01-15": {
@@ -33256,11 +33256,11 @@
 },
 "DSM-PGD-2026-12-25": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "15:32",
 "estimate": false,
 "flight": null,
-"price": 332.0,
+"price": 297.0,
 "source": "google_flights"
 },
 "DSM-PGD-2026-12-30": {
@@ -33327,12 +33327,12 @@
 "source": "google_flights"
 },
 "DSM-PGD-2027-01-14": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "G4",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "15:09",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 246.0,
 "source": "google_flights"
 },
 "DSM-PGD-2027-01-15": {
@@ -35146,20 +35146,20 @@
 },
 "DSM-PHX-2026-12-25": {
 "airline": "AA",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "05:00",
 "estimate": false,
 "flight": null,
-"price": 236.0,
+"price": 220.0,
 "source": "google_flights"
 },
 "DSM-PHX-2026-12-30": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "AA",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "18:04",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 320.0,
 "source": "google_flights"
 },
 "DSM-PHX-2026-12-31": {
@@ -35218,11 +35218,11 @@
 },
 "DSM-PHX-2027-01-14": {
 "airline": "AA",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "05:00",
 "estimate": false,
 "flight": null,
-"price": 236.0,
+"price": 287.0,
 "source": "google_flights"
 },
 "DSM-PHX-2027-01-15": {
@@ -36091,20 +36091,20 @@
 },
 "DSM-PIE-2026-12-25": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "11:00",
 "estimate": false,
 "flight": null,
-"price": 312.0,
+"price": 383.0,
 "source": "google_flights"
 },
 "DSM-PIE-2026-12-30": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "07:00",
 "estimate": false,
 "flight": null,
-"price": 250.0,
+"price": 312.0,
 "source": "google_flights"
 },
 "DSM-PIE-2026-12-31": {
@@ -37036,7 +37036,7 @@
 },
 "DSM-RSW-2026-12-25": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "14:50",
 "estimate": false,
 "flight": null,
@@ -37981,20 +37981,20 @@
 },
 "DSM-SFB-2026-12-25": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "08:00",
 "estimate": false,
 "flight": null,
-"price": 212.0,
+"price": 233.0,
 "source": "google_flights"
 },
 "DSM-SFB-2026-12-30": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "G4",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "14:30",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 233.0,
 "source": "google_flights"
 },
 "DSM-SFB-2026-12-31": {
@@ -38935,11 +38935,11 @@
 },
 "DSM-SNA-2026-12-30": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "07:30",
 "estimate": false,
 "flight": null,
-"price": 255.0,
+"price": 230.0,
 "source": "google_flights"
 },
 "DSM-SNA-2026-12-31": {
@@ -39943,7 +39943,7 @@
 },
 "DSM-SRQ-2027-01-14": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "07:30",
 "estimate": false,
 "flight": null,
@@ -42679,12 +42679,12 @@
 },
 "EWR-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "EWR-DSM-2027-01-24": {
 "airline": null,
@@ -43624,12 +43624,12 @@
 },
 "FLL-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "FLL-DSM-2027-01-24": {
 "airline": "G4",
@@ -44506,12 +44506,12 @@
 },
 "GUF-DSM-2027-01-04": {
 "airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "GUF-DSM-2027-01-05": {
 "airline": null,
@@ -44569,12 +44569,12 @@
 },
 "GUF-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "GUF-DSM-2027-01-24": {
 "airline": null,
@@ -47323,12 +47323,12 @@
 },
 "JAX-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "JAX-DSM-2027-01-24": {
 "airline": null,
@@ -48205,11 +48205,11 @@
 },
 "LAS-DSM-2027-01-04": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "07:35",
 "estimate": false,
 "flight": null,
-"price": 186.0,
+"price": 172.0,
 "source": "google_flights"
 },
 "LAS-DSM-2027-01-05": {
@@ -48268,11 +48268,11 @@
 },
 "LAS-DSM-2027-01-19": {
 "airline": "WN",
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "12:50",
 "estimate": false,
 "flight": null,
-"price": 150.0,
+"price": 144.0,
 "source": "google_flights"
 },
 "LAS-DSM-2027-01-24": {
@@ -51823,11 +51823,11 @@
 },
 "MDW-DSM-2027-01-04": {
 "airline": "WN",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "10:05",
 "estimate": false,
 "flight": null,
-"price": 155.0,
+"price": 144.0,
 "source": "google_flights"
 },
 "MDW-DSM-2027-01-05": {
@@ -51886,11 +51886,11 @@
 },
 "MDW-DSM-2027-01-19": {
 "airline": "WN",
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "20:10",
 "estimate": false,
 "flight": null,
-"price": 130.0,
+"price": 129.0,
 "source": "google_flights"
 },
 "MDW-DSM-2027-01-24": {
@@ -52768,11 +52768,11 @@
 },
 "MIA-DSM-2027-01-04": {
 "airline": "AA",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "21:45",
 "estimate": false,
 "flight": null,
-"price": 710.0,
+"price": 653.0,
 "source": "google_flights"
 },
 "MIA-DSM-2027-01-05": {
@@ -52831,11 +52831,11 @@
 },
 "MIA-DSM-2027-01-19": {
 "airline": "AA",
-"checked": "2026-11-06T17:47:31+00:00",
-"depart_time": "20:10",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "20:07",
 "estimate": false,
 "flight": null,
-"price": 675.0,
+"price": 680.0,
 "source": "google_flights"
 },
 "MIA-DSM-2027-01-24": {
@@ -55477,12 +55477,12 @@
 },
 "PDX-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "PDX-DSM-2027-01-24": {
 "airline": null,
@@ -56359,11 +56359,11 @@
 },
 "PGD-DSM-2027-01-04": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "13:19",
 "estimate": false,
 "flight": null,
-"price": 246.0,
+"price": 224.0,
 "source": "google_flights"
 },
 "PGD-DSM-2027-01-05": {
@@ -56422,12 +56422,12 @@
 },
 "PGD-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "PGD-DSM-2027-01-24": {
 "airline": "G4",
@@ -57367,12 +57367,12 @@
 },
 "PHL-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "PHL-DSM-2027-01-24": {
 "airline": null,
@@ -58248,12 +58248,12 @@
 "source": "google_flights"
 },
 "PHX-DSM-2027-01-04": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "AA",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "13:31",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 205.0,
 "source": "google_flights"
 },
 "PHX-DSM-2027-01-05": {
@@ -58311,12 +58311,12 @@
 "source": "google_flights"
 },
 "PHX-DSM-2027-01-19": {
-"airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
-"depart_time": null,
+"airline": "AA",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "09:50",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 149.0,
 "source": "google_flights"
 },
 "PHX-DSM-2027-01-24": {
@@ -59194,11 +59194,11 @@
 },
 "PIE-DSM-2027-01-04": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "14:57",
 "estimate": false,
 "flight": null,
-"price": 184.0,
+"price": 168.0,
 "source": "google_flights"
 },
 "PIE-DSM-2027-01-05": {
@@ -59257,12 +59257,12 @@
 },
 "PIE-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "PIE-DSM-2027-01-24": {
 "airline": null,
@@ -60139,11 +60139,11 @@
 },
 "RSW-DSM-2027-01-04": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "19:38",
 "estimate": false,
 "flight": null,
-"price": 166.0,
+"price": 150.0,
 "source": "google_flights"
 },
 "RSW-DSM-2027-01-05": {
@@ -60202,12 +60202,12 @@
 },
 "RSW-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "RSW-DSM-2027-01-24": {
 "airline": null,
@@ -60849,26 +60849,26 @@
 "price": 679.0
 },
 "RT|ATL|2026-11-26|2026-11-29": {
-"airline": "DL",
-"checked": "2026-11-15T17:35:13+00:00",
-"depart_time": "05:30",
-"price": 898.0
+"checked": "2026-11-20T19:00:42+00:00",
+"price": null
 },
 "RT|ATL|2026-11-27|2026-11-30": {
 "airline": "DL",
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "depart_time": "05:30",
-"price": 609.0
+"price": 659.0
 },
 "RT|ATL|2026-12-03|2026-12-06": {
-"checked": "2026-11-15T17:35:13+00:00",
-"price": null
+"airline": "DL",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "05:20",
+"price": 609.0
 },
 "RT|ATL|2026-12-04|2026-12-07": {
 "airline": "DL",
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "depart_time": "05:20",
-"price": 529.0
+"price": 559.0
 },
 "RT|ATL|2026-12-10|2026-12-13": {
 "checked": "2026-11-16T20:51:46+00:00",
@@ -60900,7 +60900,7 @@
 },
 "RT|ATL|2026-12-25|2026-12-28": {
 "airline": "DL",
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "depart_time": "16:00",
 "price": 598.0
 },
@@ -60928,7 +60928,7 @@
 },
 "RT|ATL|2027-01-14|2027-01-17": {
 "airline": "DL",
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "depart_time": "05:30",
 "price": 738.0
 },
@@ -62023,10 +62023,10 @@
 "price": 287.0
 },
 "RT|DEN|2026-11-26|2026-11-29": {
-"airline": "UA",
-"checked": "2026-11-15T17:35:13+00:00",
-"depart_time": "05:30",
-"price": 704.0
+"airline": "F9",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "20:28",
+"price": 610.0
 },
 "RT|DEN|2026-11-26|2026-11-30": {
 "airline": "F9",
@@ -62036,9 +62036,9 @@
 },
 "RT|DEN|2026-11-27|2026-11-30": {
 "airline": "WN",
-"checked": "2026-11-15T17:35:13+00:00",
-"depart_time": "19:15",
-"price": 655.0
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "06:40",
+"price": 849.0
 },
 "RT|DEN|2026-11-27|2026-12-01": {
 "airline": "WN",
@@ -62053,16 +62053,16 @@
 "price": 489.0
 },
 "RT|DEN|2026-12-04|2026-12-07": {
-"airline": "WN",
-"checked": "2026-11-15T17:35:13+00:00",
-"depart_time": "18:30",
-"price": 409.0
+"airline": "UA",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "13:23",
+"price": 566.0
 },
 "RT|DEN|2026-12-10|2026-12-13": {
-"airline": "UA",
-"checked": "2026-11-15T17:35:13+00:00",
-"depart_time": "09:00",
-"price": 379.0
+"airline": "WN",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "07:00",
+"price": 459.0
 },
 "RT|DEN|2026-12-11|2026-12-14": {
 "airline": "WN",
@@ -62071,10 +62071,10 @@
 "price": 349.0
 },
 "RT|DEN|2026-12-17|2026-12-20": {
-"airline": "UA",
-"checked": "2026-11-15T17:35:13+00:00",
-"depart_time": "17:12",
-"price": 369.0
+"airline": "WN",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "06:40",
+"price": 419.0
 },
 "RT|DEN|2026-12-18|2026-12-21": {
 "airline": "UA",
@@ -62084,15 +62084,15 @@
 },
 "RT|DEN|2026-12-24|2026-12-27": {
 "airline": "UA",
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "depart_time": "05:30",
-"price": 369.0
+"price": 358.0
 },
 "RT|DEN|2026-12-25|2026-12-28": {
 "airline": "UA",
-"checked": "2026-11-15T17:35:13+00:00",
-"depart_time": "05:30",
-"price": 378.0
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "17:12",
+"price": 403.0
 },
 "RT|DEN|2026-12-31|2027-01-03": {
 "airline": "UA",
@@ -62119,10 +62119,10 @@
 "price": 322.0
 },
 "RT|DEN|2027-01-14|2027-01-17": {
-"airline": "WN",
-"checked": "2026-11-15T17:35:13+00:00",
-"depart_time": "18:30",
-"price": 369.0
+"airline": "UA",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "13:42",
+"price": 358.0
 },
 "RT|DEN|2027-01-15|2027-01-18": {
 "airline": "UA",
@@ -64373,10 +64373,8 @@
 "price": 1513.0
 },
 "RT|MIA|2027-01-08|2027-01-11": {
-"airline": "AA",
-"checked": "2026-11-14T16:50:26+00:00",
-"depart_time": "05:00",
-"price": 1041.0
+"checked": "2026-11-20T19:00:42+00:00",
+"price": null
 },
 "RT|MIA|2027-01-14|2027-01-17": {
 "airline": "AA",
@@ -64561,7 +64559,7 @@
 "price": null
 },
 "RT|MIA|2027-05-14|2027-05-17": {
-"checked": "2026-10-19T17:20:11+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "price": null
 },
 "RT|MIA|2027-05-20|2027-05-23": {
@@ -65657,7 +65655,7 @@
 "price": null
 },
 "RT|PHL|2026-12-03|2026-12-06": {
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "price": null
 },
 "RT|PHL|2026-12-04|2026-12-07": {
@@ -65669,11 +65667,11 @@
 "price": null
 },
 "RT|PHL|2026-12-11|2026-12-14": {
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "price": null
 },
 "RT|PHL|2026-12-17|2026-12-20": {
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "price": null
 },
 "RT|PHL|2026-12-18|2026-12-21": {
@@ -65705,7 +65703,7 @@
 "price": null
 },
 "RT|PHL|2027-01-14|2027-01-17": {
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "price": null
 },
 "RT|PHL|2027-01-15|2027-01-18": {
@@ -65960,21 +65958,27 @@
 },
 "RT|PHX|2026-11-27|2026-11-30": {
 "airline": "AA",
-"checked": "2026-11-15T17:35:13+00:00",
-"depart_time": "18:02",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "05:00",
 "price": 584.0
 },
 "RT|PHX|2026-12-03|2026-12-06": {
-"checked": "2026-11-15T17:35:13+00:00",
-"price": null
+"airline": "AA",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "05:05",
+"price": 584.0
 },
 "RT|PHX|2026-12-04|2026-12-07": {
-"checked": "2026-11-15T17:35:13+00:00",
-"price": null
+"airline": "AA",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "14:59",
+"price": 584.0
 },
 "RT|PHX|2026-12-10|2026-12-13": {
-"checked": "2026-11-15T17:35:13+00:00",
-"price": null
+"airline": "AA",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "05:05",
+"price": 562.0
 },
 "RT|PHX|2026-12-11|2026-12-14": {
 "airline": "AA",
@@ -65983,14 +65987,16 @@
 "price": 451.0
 },
 "RT|PHX|2026-12-17|2026-12-20": {
-"checked": "2026-11-15T17:35:13+00:00",
-"price": null
+"airline": "AA",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "05:00",
+"price": 459.0
 },
 "RT|PHX|2026-12-18|2026-12-21": {
 "airline": "AA",
-"checked": "2026-11-15T17:35:13+00:00",
+"checked": "2026-11-20T19:00:42+00:00",
 "depart_time": "05:00",
-"price": 451.0
+"price": 424.0
 },
 "RT|PHX|2026-12-24|2026-12-27": {
 "airline": "AA",
@@ -65999,8 +66005,10 @@
 "price": 471.0
 },
 "RT|PHX|2026-12-25|2026-12-28": {
-"checked": "2026-11-15T17:35:13+00:00",
-"price": null
+"airline": "AA",
+"checked": "2026-11-20T19:00:42+00:00",
+"depart_time": "05:00",
+"price": 474.0
 },
 "RT|PHX|2026-12-31|2027-01-03": {
 "airline": "AA",
@@ -66590,11 +66598,11 @@
 },
 "SFB-DSM-2027-01-04": {
 "airline": "G4",
-"checked": "2026-11-15T17:31:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": "11:36",
 "estimate": false,
 "flight": null,
-"price": 322.0,
+"price": 233.0,
 "source": "google_flights"
 },
 "SFB-DSM-2027-01-05": {
@@ -66653,12 +66661,12 @@
 },
 "SFB-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "SFB-DSM-2027-01-24": {
 "airline": null,
@@ -67534,12 +67542,12 @@
 "source": "google_flights"
 },
 "SNA-DSM-2027-01-04": {
-"airline": null,
-"checked": "2026-11-15T17:31:31+00:00",
-"depart_time": null,
+"airline": "G4",
+"checked": "2026-11-20T18:56:29+00:00",
+"depart_time": "17:12",
 "estimate": false,
 "flight": null,
-"price": null,
+"price": 162.0,
 "source": "google_flights"
 },
 "SNA-DSM-2027-01-05": {
@@ -67598,12 +67606,12 @@
 },
 "SNA-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "SNA-DSM-2027-01-24": {
 "airline": null,
@@ -68543,12 +68551,12 @@
 },
 "SRQ-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "SRQ-DSM-2027-01-24": {
 "airline": "G4",
@@ -69488,12 +69496,12 @@
 },
 "VPS-DSM-2027-01-19": {
 "airline": null,
-"checked": "2026-11-06T17:47:31+00:00",
+"checked": "2026-11-20T18:56:29+00:00",
 "depart_time": null,
 "estimate": false,
 "flight": null,
 "price": null,
-"source": "google_flights"
+"source": "ignav"
 },
 "VPS-DSM-2027-01-24": {
 "airline": null,
