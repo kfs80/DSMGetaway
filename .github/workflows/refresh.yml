@@ -2,12 +2,12 @@ name: Refresh fares
 
 on:
   schedule:
-    - cron: "0 11 * * *"      # Mondays ~6 AM Central. Edit to change cadence.
+    - cron: "0 11 * * *"      # Daily ~6 AM Central. Edit to change cadence.
   workflow_dispatch:           # "Run workflow" button = on-demand refresh
     inputs:
       mode:
-        description: "refresh | build-only | mock"
-        default: "refresh"
+        description: "incremental | g4 | build-only | mock"
+        default: "incremental"
 
 permissions:
   contents: write
@@ -22,32 +22,38 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
-      - run: pip install -r requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
 
       - name: Look up fares and build site
         timeout-minutes: 70
         env:
+          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
           IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
+          SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
         run: |
-          MODE="${{ github.event.inputs.mode || 'refresh' }}"
-          if [ "$MODE" = "build-only" ]; then python src/refresh.py --build-only
-          elif [ "$MODE" = "mock" ]; then python src/refresh.py --mock
-          else python src/refresh.py; fi
+          MODE="${{ github.event.inputs.mode || 'incremental' }}"
+          if [ "$MODE" = "build-only" ]; then node src/refresh.js --build-only
+          elif [ "$MODE" = "mock" ]; then node src/refresh.js --mock
+          elif [ "$MODE" = "g4" ]; then node src/refresh.js --mode=g4
+          else node src/refresh.js --mode=incremental; fi
 
       # Safety net: if the lookup step failed or timed out, still build the
       # site from whatever prices were saved so nothing is lost.
       - name: Rebuild site from saved prices (only if lookup step failed)
         if: failure() || cancelled()
-        run: python src/refresh.py --build-only
+        run: node src/refresh.js --build-only
 
-      - name: Save fare cache
+      - name: Save fare cache and provider health
         if: always()
         run: |
           git config user.name  "fare-bot"
           git config user.email "fare-bot@users.noreply.github.com"
           [ -f data/fares.json ] && git add data/fares.json
+          [ -f data/provider_health.json ] && git add data/provider_health.json
           git diff --cached --quiet || git commit -m "Fare refresh $(date -u +%F)"
           git push
 

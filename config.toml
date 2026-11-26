@@ -32,15 +32,20 @@ WN = 0     # Southwest
 # F9 = 0   # Frontier   <- fill in if you turn bags on
 
 [data]
-# Providers are tried in order for each lookup.
-#  "google_flights" = free, unlimited, unofficial (fast-flights library).
-#  "ignav"          = official API, 1,000 free requests, needs IGNAV_API_KEY.
-#  "mock"           = fake prices, for testing the site only.
-providers                = ["google_flights", "ignav"]
+# Providers are tried in order across batch calendar + precision fallback passes.
+#  "google_flights"   = free, keyless Google Flights (CalendarGraph + tfs single-date + RT).
+#  "allegiant_direct" = free, keyless direct Allegiant (G4) calendar adapter (circuit-breaker protected).
+#  "frontier_direct"  = free, keyless direct Frontier (F9) calendar adapter (circuit-breaker protected).
+#  "travelpayouts"    = permanently free cached monthly API (needs TRAVELPAYOUTS_TOKEN).
+#  "ignav"            = official API, 1,000 free requests (needs IGNAV_API_KEY).
+#  "serpapi"          = Google Flights JSON API free monthly tier (needs SERPAPI_API_KEY).
+#  "mock"             = fake prices, for offline testing only.
+providers                = ["google_flights", "allegiant_direct", "frontier_direct", "travelpayouts", "ignav", "serpapi"]
 max_lookups_per_run      = 1200   # cap per refresh. Leftovers roll to the next run.
-max_paid_lookups_per_run = 50    # cap for "ignav" specifically
+max_paid_lookups_per_run = 50    # legacy alias for ignav per-run cap
 max_minutes_per_run      = 50    # stop looking up after this, then save + publish
-pause_seconds            = 1.5   # be polite between lookups
+pause_seconds            = 1.5   # polite base pause between lookups (randomized jitter applied)
+auto_refresh_hours       = 0     # set > 0 (e.g. 12 or 24) to enable in-app background refresh timer
 
 # How long a price stays "Live" before it is re-checked.
 fresh_days_near  = 5    # trips within near_window_days
@@ -54,3 +59,12 @@ learn_no_flight_after = 3
 [roundtrip]
 max_lookups_per_run = 300
 expand_if_pp_under = 125
+
+# Strict $0 budget guardrails for free-tier API providers
+[provider_budgets]
+travelpayouts_per_run = 80
+travelpayouts_monthly = 5000
+ignav_per_run         = 50
+ignav_monthly         = 250
+serpapi_per_run       = 10
+serpapi_monthly       = 80

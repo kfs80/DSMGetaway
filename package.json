@@ -1,0 +1,17 @@
+{
+  "name": "dsm-weekend-getaways",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "node src/build.js",
+    "refresh": "node src/refresh.js",
+    "start": "node server.js",
+    "lint": "node --check server.js && node --check src/build.js && node --check src/health.js && node --check src/refresh.js && node --check src/providers/base.js && node --check src/providers/google_flights.js && node --check src/providers/travelpayouts.js && node --check src/providers/allegiant.js && node --check src/providers/frontier.js && node --check src/providers/ignav.js && node --check src/providers/serpapi.js && node --check src/providers/mock.js && node --check src/providers/index.js"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "smol-toml": "^1.9.1"
+  }
+}
