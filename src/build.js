@@ -94,6 +94,7 @@ export function loadRoutes() {
       seasonal: (row.seasonal || "").toLowerCase() === "yes",
       fly_days: fly.length ? new Set(fly.map((d) => DAYS.indexOf(d))) : null,
       start_date: row.start_date || null,
+      priority: Math.max(1, Number(row.priority) || 1),
     });
   }
 
@@ -350,6 +351,7 @@ export function buildGrid(cfg, routes, trips, cache, today, stats) {
       airlines: r.airlines,
       seasonal: r.seasonal,
       start_date: r.start_date || null,
+      priority: r.priority || 1,
       trips: tripsOut,
     });
   }
@@ -393,6 +395,7 @@ export function compact(grid) {
     city: r.city,
     airlines: r.airlines,
     seasonal: r.seasonal,
+    priority: r.priority || 1,
     ...(r.start_date ? { start_date: r.start_date } : {}),
     t: r.trips.map((t) => {
       const row = [t.dep, t.ret, S[t.status]];

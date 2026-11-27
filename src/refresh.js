@@ -209,8 +209,13 @@ function groupTodoByRouteMonth(todo) {
     }
     g.items.push(item);
   }
-  // Prioritize route-months with the most missing/stale legs first
-  return [...groups.values()].sort((a, b) => b.items.length - a.items.length);
+  // Prioritize Core (priority 1) route-months first, then most missing/stale legs
+  return [...groups.values()].sort((a, b) => {
+    const pa = a.route?.priority || 1;
+    const pb = b.route?.priority || 1;
+    if (pa !== pb) return pa - pb;
+    return b.items.length - a.items.length;
+  });
 }
 
 export async function runRefresh(options = {}) {
@@ -280,8 +285,12 @@ export async function runRefresh(options = {}) {
     return !isFresh(cache[item.key], item.day, cfg, today);
   });
 
-  // Sort: missing first, then soonest departure date
+  // Priority queue: Core (priority 1) always refreshes before Hubs (priority 2),
+  // then missing first, then soonest departure date.
   todo.sort((a, b) => {
+    const pa = a.route?.priority || 1;
+    const pb = b.route?.priority || 1;
+    if (pa !== pb) return pa - pb;
     const aHas = Object.prototype.hasOwnProperty.call(cache, a.key) ? 1 : 0;
     const bHas = Object.prototype.hasOwnProperty.call(cache, b.key) ? 1 : 0;
     if (aHas !== bHas) return aHas - bHas;
@@ -366,7 +375,11 @@ export async function runRefresh(options = {}) {
     });
   }
 
-  onLog(`Queued ${todo.length} one-way legs (cap: ${maxLookups} requests).`);
+  const coreTodoCount = todo.filter((it) => (it.route?.priority || 1) === 1).length;
+  const hubTodoCount = todo.length - coreTodoCount;
+  onLog(
+    `Queued ${todo.length} one-way legs (Core: ${coreTodoCount}, Hubs: ${hubTodoCount}; cap: ${maxLookups} requests).`
+  );
   emitState(null, null);
 
   let cancelled = false;
@@ -404,7 +417,8 @@ export async function runRefresh(options = {}) {
         }
         if (stats.attempted >= maxLookups) break;
 
-        emitState(p.label, `${g.origin}→${g.dest} (${g.yearMonth})`);
+        const tierTag = (g.route?.priority || 1) > 1 ? "Hub" : "Core";
+        emitState(p.label, `${tierTag} · ${g.origin}→${g.dest} (${g.yearMonth})`);
         try {
           stats.attempted += 1;
           stats.batchRequests += 1;
@@ -504,13 +518,14 @@ export async function runRefresh(options = {}) {
       }
 
       const isG4 = item.route.airlines.includes("G4");
+      const isCore = (item.route?.priority || 1) === 1;
       const isNear = diffDays(item.day, today) <= 45;
       const dateIso = formatDate(item.day);
 
       const usable = singleDateOrder.filter((p) => {
         if (!canUseProvider(p)) return false;
-        // Reserve Tier-3 budgeted free APIs strictly for G4 blind spots or near-term gaps
-        if (p.isPaid && !isG4 && !isNear) return false;
+        // Reserve Tier-3 budgeted free APIs strictly for Core routes (G4 blind spots or near-term gaps)
+        if (p.isPaid && (!isCore || (!isG4 && !isNear))) return false;
         return true;
       });
 
@@ -522,7 +537,7 @@ export async function runRefresh(options = {}) {
       let resolved = false;
       for (let idx = 0; idx < usable.length; idx++) {
         const p = usable[idx];
-        emitState(p.label, `${item.origin}→${item.dest} ${dateIso}`);
+        emitState(p.label, `${isCore ? "Core" : "Hub"} · ${item.origin}→${item.dest} ${dateIso}`);
         stats.attempted += 1;
         runCallsByProvider[p.name] = (runCallsByProvider[p.name] || 0) + 1;
 
@@ -624,8 +639,8 @@ export async function runRefresh(options = {}) {
     const legacyRoutes = routes.filter((r) => r.airlines.some((a) => wantLegacy.has(a)));
 
     if (legacyRoutes.length > 0) {
-      const rtCap = Math.min(rtCfg.max_lookups_per_run, Math.max(4, Math.floor(maxLookups / 4)));
-      onLog(`Pass 3 (Legacy Round-Trip): checking ${legacyRoutes.length} routes (cap: ${rtCap})...`);
+      const rtCap = Math.min(rtCfg.max_lookups_per_run, Math.max(4, Math.floor(maxLookups / 2)));
+      onLog(`Pass 3 (Legacy Round-Trip): checking ${legacyRoutes.length} routes (cap: ${rtCap}, Core first)...`);
 
       for (const phase of [1, 2]) {
         if (cancelled || stats.roundtrip.attempted >= rtCap) break;
@@ -663,7 +678,12 @@ export async function runRefresh(options = {}) {
           }
         }
 
-        rtTodo.sort((a, b) => a.dep.getTime() - b.dep.getTime());
+        rtTodo.sort((a, b) => {
+          const pa = a.route?.priority || 1;
+          const pb = b.route?.priority || 1;
+          if (pa !== pb) return pa - pb;
+          return a.dep.getTime() - b.dep.getTime();
+        });
 
         for (const item of rtTodo) {
           if (signal?.aborted) {
@@ -678,9 +698,10 @@ export async function runRefresh(options = {}) {
 
           const depIso = formatDate(item.dep);
           const retIso = formatDate(item.ret);
+          const rtTierTag = (item.route?.priority || 1) > 1 ? "Hub" : "Core";
 
           for (const p of usableRt) {
-            emitState(`${p.label} (RT)`, `${cfg.origin}⇄${item.route.code} ${depIso}`);
+            emitState(`${p.label} (RT)`, `${rtTierTag} · ${cfg.origin}⇄${item.route.code} ${depIso}`);
             stats.roundtrip.attempted += 1;
             runCallsByProvider[p.name] = (runCallsByProvider[p.name] || 0) + 1;
             try {

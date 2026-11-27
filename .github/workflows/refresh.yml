@@ -66,8 +66,23 @@ jobs:
           git config user.email "fare-bot@users.noreply.github.com"
           [ -f data/fares.json ] && git add data/fares.json
           [ -f data/provider_health.json ] && git add data/provider_health.json
-          git diff --cached --quiet || git commit -m "Fare refresh $(date -u +%F)"
-          git push
+          if git diff --cached --quiet; then
+            echo "No fare cache changes to commit."
+            exit 0
+          fi
+          git commit -m "Fare refresh $(date -u +%F)"
+          BRANCH="${GITHUB_REF_NAME:-main}"
+          for attempt in 1 2 3; do
+            git fetch origin "$BRANCH"
+            git rebase -X theirs "origin/$BRANCH"
+            if git push origin "HEAD:$BRANCH"; then
+              exit 0
+            fi
+            echo "Push attempt $attempt conflicted; retrying..."
+            sleep 3
+          done
+          echo "Failed to push after 3 attempts" >&2
+          exit 1
 
       - uses: actions/upload-pages-artifact@v3
         if: always()

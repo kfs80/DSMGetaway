@@ -347,8 +347,8 @@ app.get("/api/providers", (_req, res) => {
     const health = loadHealth();
     const routes = loadRoutes()
       .filter((r) => !r.airlines.includes("LINK"))
-      .map((r) => ({ code: r.code, city: r.city, airlines: r.airlines }))
-      .sort((a, b) => a.city.localeCompare(b.city));
+      .map((r) => ({ code: r.code, city: r.city, airlines: r.airlines, priority: r.priority || 1 }))
+      .sort((a, b) => (a.priority - b.priority) || a.city.localeCompare(b.city));
 
     res.json({
       providers: getProviderStatusSnapshot(cfg, health),

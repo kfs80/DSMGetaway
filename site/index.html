@@ -517,13 +517,269 @@
     flex-wrap: wrap;
   }
 
+  /* ==================== VISUAL BAGGAGE FEE CALCULATOR ==================== */
+  .bag-calc-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.18fr);
+    gap: 22px;
+    align-items: stretch;
+  }
+  .bag-col-left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 22px;
+    border-right: 1px solid var(--line);
+  }
+  .bag-col-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .bag-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .bag-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .bag-sub {
+    font-size: 11.5px;
+    color: var(--mute);
+    margin-top: 2px;
+  }
+  .bag-reset-btn {
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    font: 600 12px/1.2 var(--font-sans);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background-color 140ms var(--ease);
+  }
+  .bag-reset-btn:hover { background: var(--accent-soft); }
+  .bag-steppers {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bag-step-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: var(--bg);
+    border: 1px solid #e9eef5;
+  }
+  .bag-step-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .bag-step-ico {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .bag-step-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .bag-step-desc {
+    font-size: 11px;
+    color: var(--mute);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 2px;
+    flex-shrink: 0;
+  }
+  .stepper button {
+    width: 30px;
+    height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink);
+    font: 600 15px/1 var(--font-mono);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 120ms var(--ease), color 120ms var(--ease);
+  }
+  .stepper button:hover:not(:disabled) {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .stepper button:disabled {
+    opacity: 0.32;
+    cursor: not-allowed;
+  }
+  .stepper-val {
+    min-width: 24px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .bag-preview-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .bag-trip-select {
+    font: 600 12px/1.2 var(--font-sans);
+    color: var(--ink);
+    padding: 6px 9px;
+    border-radius: 8px;
+    border: 1px solid var(--line-strong);
+    background: var(--bg);
+    max-width: 285px;
+    cursor: pointer;
+  }
+  .bag-kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .bag-kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--mute);
+  }
+  .bag-kpi-val {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    line-height: 1.15;
+    margin-top: 2px;
+  }
+  .bag-kpi-val.is-accent { color: var(--accent-ink); }
+  .bag-kpi-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--mute);
+    margin-top: 2px;
+  }
+  .bag-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .bag-bar-track {
+    height: 10px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+    display: flex;
+  }
+  .bag-bar-fare {
+    background: #0284c7;
+    height: 100%;
+    transition: width 180ms var(--ease);
+  }
+  .bag-bar-fees {
+    background: #d97706;
+    height: 100%;
+    transition: width 180ms var(--ease);
+  }
+  .bag-bar-legend {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .bag-leg-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bag-swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+  .bag-policy-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px;
+  }
+  .bag-policy-head {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .bag-policy-val {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+  .bag-policy-val.warn { color: var(--warn); }
+  .bag-policy-val.ok { color: var(--ok); }
+  .bag-policy-note {
+    font-size: 10.5px;
+    color: var(--mute);
+    margin-top: 1px;
+  }
+
   /* ==================== WORKSPACE CONTROL BAR ==================== */
   .controls-card {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    border-bottom: 0;
+    border-radius: var(--radius-lg);
     padding: 14px 16px;
+    margin-bottom: 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -720,17 +976,19 @@
   /* ==================== FARE MATRIX TABLE ==================== */
   .grid-shell {
     border: 1px solid var(--line);
-    border-top: 0;
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-    background: var(--surface);
+    border-radius: 16px;
+    background: var(--bg);
     overflow: hidden;
     margin-bottom: 32px;
+    padding-top: 8px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   }
   .grid-scroll {
     overflow-x: auto;
     overflow-y: auto;
     max-height: 76vh;
-    scrollbar-color: var(--line-strong) var(--surface-subtle);
+    padding: 0 12px 10px 0;
+    scrollbar-color: var(--line-strong) var(--bg);
     scrollbar-width: thin;
   }
   table.grid-table {
@@ -740,13 +998,12 @@
   }
   .grid-table th,
   .grid-table td {
-    border-bottom: 1px solid var(--line);
-    border-right: 1px solid #edf1f7;
+    border-bottom: 1px solid #e8eef5;
+    border-right: 0;
   }
-  .grid-table tr > *:last-child { border-right: 0; }
   .grid-table tbody tr:last-child > * { border-bottom: 0; }
 
-  /* Deep Aviation Navy Sticky Column Headers */
+  /* Floating Deep Aviation Navy Sticky Column Header Bar */
   .grid-table thead th {
     position: sticky;
     top: 0;
@@ -758,9 +1015,17 @@
     letter-spacing: -0.01em;
     color: var(--matrix-head-ink);
     white-space: nowrap;
-    text-align: left;
-    border-bottom: 1px solid #020617;
-    border-right: 1px solid var(--matrix-head-sep);
+    text-align: center;
+    border-bottom: 0;
+    box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.24);
+  }
+  .grid-table thead th:nth-child(2) {
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+  }
+  .grid-table thead th:last-child {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
   }
   .grid-table thead th .wk-sub {
     display: block;
@@ -772,37 +1037,44 @@
     letter-spacing: 0.01em;
   }
   .grid-table thead th.month-start {
-    border-left: 2px solid var(--matrix-head-month);
+    box-shadow: inset 1px 0 0 rgba(148, 163, 184, 0.26), 0 4px 12px -4px rgba(15, 23, 42, 0.24);
   }
   .grid-table td.month-start {
-    border-left: 2px solid #cbd5e1;
+    border-left: 1px dashed #d5dfeb;
+    padding-left: 11px;
   }
 
-  /* Sticky Destination Column */
+  /* Sticky Destination Column — Open Canvas Integration */
   .grid-table thead th:first-child {
     left: 0;
     z-index: 6;
     text-align: left;
-    padding: 11px 16px;
-    min-width: 210px;
-    border-right: 1px solid rgba(148, 163, 184, 0.24);
-    box-shadow: 6px 0 14px -8px rgba(2, 6, 23, 0.45);
+    padding: 12px 18px;
+    min-width: 220px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    font-weight: 700;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 8px 0 16px -12px rgba(15, 23, 42, 0.16);
+  }
+  .grid-table thead th:first-child .wk-sub {
+    color: var(--mute);
   }
   .grid-table tbody th {
     position: sticky;
     left: 0;
     z-index: 2;
-    background: var(--surface);
+    background: var(--bg);
     text-align: left;
-    padding: 10px 16px;
-    min-width: 210px;
+    padding: 12px 18px;
+    min-width: 220px;
     white-space: nowrap;
-    border-right: 1px solid var(--line);
-    box-shadow: 6px 0 14px -10px rgba(15, 23, 42, 0.16);
+    box-shadow: 8px 0 16px -12px rgba(15, 23, 42, 0.14);
     transition: background-color 140ms var(--ease);
   }
   .grid-table tbody tr:not(.state):hover th {
-    background: #f8fafc;
+    background: #f1f5f9;
   }
   .grid-table tbody tr:not(.state):hover th .city {
     color: var(--accent);
@@ -841,7 +1113,7 @@
   .grid-table th .meta-info {
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 145px;
+    max-width: 148px;
   }
   .grid-table th .row-min {
     font-family: var(--font-mono);
@@ -855,21 +1127,22 @@
   .grid-table th .row-min.warm { color: #784d0a; }
   .grid-table th .row-min.high { color: var(--mute); }
 
-  /* State Divider Row */
+  /* Airy State Divider Row */
   .grid-table tr.state th,
   .grid-table tr.state td {
-    background: #eef2f7;
-    border-bottom: 1px solid var(--line-strong);
-    border-right: 0;
+    background: #eef3f8;
+    border-bottom: 1px solid #dce5f0;
     height: auto;
+    padding-top: 6px;
+    padding-bottom: 6px;
   }
   .grid-table tr.state th {
     font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.01em;
     color: var(--ink-soft);
-    padding: 7px 16px;
-    box-shadow: 6px 0 14px -10px rgba(15, 23, 42, 0.12);
+    padding: 7px 18px;
+    box-shadow: 8px 0 16px -12px rgba(15, 23, 42, 0.12);
   }
   .grid-table tr.state .st-cnt {
     font-family: var(--font-mono);
@@ -879,58 +1152,67 @@
     margin-left: 6px;
   }
 
-  /* Perceptual Coastal Slate & Sea-Glass Price Tiers */
+  /* Soft Rounded Fare Bubble Tiles on Open Canvas */
   .grid-table td {
     --cell-bg: #ffffff;
     --cell-hover: #f8fafc;
+    --band-border: #dce3ec;
     --band-ink: #0f172a;
     --fresh-bar: transparent;
-    padding: 0;
-    min-width: 140px;
-    height: 82px;
-    vertical-align: stretch;
+    padding: 6px 5px;
+    min-width: 148px;
+    height: 94px;
+    vertical-align: middle;
     text-align: left;
-    background: var(--cell-bg);
-    transition: background-color 130ms var(--ease), opacity 140ms var(--ease);
+    background: transparent;
   }
-  .grid-table td.band-0 { --cell-bg: #e6f7f1; --cell-hover: #d3f1e6; --band-ink: #065f46; }
-  .grid-table td.band-1 { --cell-bg: #edf7fb; --cell-hover: #dcf0f8; --band-ink: #0c5670; }
-  .grid-table td.band-2 { --cell-bg: #fcf7e8; --cell-hover: #f7ecd0; --band-ink: #784d0a; }
-  .grid-table td.band-3 { --cell-bg: #fdf0e7; --cell-hover: #fae1cf; --band-ink: #9a4016; }
-  .grid-table td.band-4 { --cell-bg: #fcefef; --cell-hover: #f8dde0; --band-ink: #9b223a; }
-  .grid-table td.band-5 { --cell-bg: #f5f7fa; --cell-hover: #ebf0f5; --band-ink: #475569; }
+  .grid-table td.band-0 { --cell-bg: #e3f7ef; --cell-hover: #d3f1e5; --band-border: #a3e0c8; --band-ink: #065f46; }
+  .grid-table td.band-1 { --cell-bg: #eaf6fc; --cell-hover: #dbf0fa; --band-border: #b3dced; --band-ink: #0c5670; }
+  .grid-table td.band-2 { --cell-bg: #fdf6e2; --cell-hover: #faebc7; --band-border: #ebd290; --band-ink: #784d0a; }
+  .grid-table td.band-3 { --cell-bg: #fdeee3; --cell-hover: #fbe0cd; --band-border: #efc1a0; --band-ink: #9a4016; }
+  .grid-table td.band-4 { --cell-bg: #fdecef; --cell-hover: #fadbe0; --band-border: #efb8c2; --band-ink: #9b223a; }
+  .grid-table td.band-5 { --cell-bg: #f1f5f9; --cell-hover: #e6edf5; --band-border: #d4deea; --band-ink: #475569; }
 
-  /* 3px Color-Coded Top Freshness Borders */
+  /* Curved Top Freshness Accent Bar */
   .grid-table td.fresh  { --fresh-bar: var(--ok-bar); }
   .grid-table td.recent { --fresh-bar: var(--recent-bar); }
   .grid-table td.stale  { --fresh-bar: var(--warn-bar); }
 
-  .grid-table td[data-r] {
-    box-shadow: inset 0 3px 0 var(--fresh-bar);
-  }
-  .grid-table td[data-r].is-best {
-    box-shadow: inset 0 3px 0 var(--fresh-bar), inset 0 0 0 1px rgba(6, 95, 70, 0.28);
-  }
-  .grid-table td[data-r]:hover {
-    background: var(--cell-hover);
-    box-shadow: inset 0 3px 0 var(--fresh-bar), inset 0 0 0 1.5px var(--accent);
-    position: relative;
-    z-index: 1;
-  }
-  .grid-table td.dimmed {
-    opacity: 0.30;
-  }
-
-  .grid-table td a,
-  .grid-table td div.c {
+  .grid-table td[data-r] > a {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 9px 10px 6px;
+    height: 100%;
+    padding: 10px 11px 7px;
+    gap: 2px;
     color: inherit;
     text-decoration: none;
-    height: 100%;
-    gap: 2px;
+    background: var(--cell-bg);
+    border: 1px solid var(--band-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: inset 0 3px 0 var(--fresh-bar), 0 1px 2px rgba(15, 23, 42, 0.05);
+    transition: transform 150ms var(--ease), background-color 140ms var(--ease), box-shadow 150ms var(--ease), border-color 140ms var(--ease), opacity 140ms var(--ease);
+  }
+  .grid-table td[data-r].is-best > a {
+    border-color: rgba(6, 95, 70, 0.45);
+    box-shadow: inset 0 3px 0 var(--fresh-bar), 0 2px 6px rgba(6, 95, 70, 0.12);
+  }
+  .grid-table td[data-r]:hover > a,
+  .grid-table td[data-r] > a:focus-visible {
+    background: var(--cell-hover);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: inset 0 3px 0 var(--fresh-bar), 0 6px 14px -4px rgba(2, 132, 199, 0.24);
+    outline: none;
+    position: relative;
+    z-index: 1;
+  }
+  .grid-table td.dimmed > a {
+    opacity: 0.28;
+  }
+  .grid-table td.dimmed:hover > a {
+    opacity: 0.72;
   }
 
   .grid-table td .cell-top {
@@ -1008,40 +1290,62 @@
     font-size: 8.5px;
     font-weight: 700;
     padding: 1px 4px;
-    border-radius: 3px;
+    border-radius: 4px;
     background: var(--ink);
     color: #fff;
     line-height: 1.15;
     letter-spacing: 0.02em;
   }
+
+  /* Minimalist Subtle Dot for Non-Operating Weekends */
   .grid-table td.none {
-    --cell-bg: #fcfdfe;
-    color: #cbd5e1;
     text-align: center;
   }
-  .grid-table td.none div.c,
-  .grid-table td.unchecked div.c {
-    justify-content: center;
+  .grid-table td.none .c {
+    display: flex;
     align-items: center;
-    padding: 6px;
+    justify-content: center;
+    height: 100%;
   }
+  .empty-dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #cbd5e1;
+  }
+
+  /* Soft Dashed Outline Bubble for Pending / Queued Hub Weekends */
   .grid-table td.unchecked {
-    background: repeating-linear-gradient(
-      -45deg,
-      #ffffff,
-      #ffffff 5px,
-      #f8fafc 5px,
-      #f8fafc 10px
-    );
-    color: #94a3b8;
     text-align: center;
   }
-  .grid-table td.none .tag,
+  .grid-table td.unchecked .c {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 8px;
+    border-radius: 14px;
+    border: 1px dashed #cbd5e1;
+    background: rgba(255, 255, 255, 0.65);
+    color: #94a3b8;
+    text-decoration: none;
+    transition: border-color 140ms var(--ease), color 140ms var(--ease), background-color 140ms var(--ease), transform 140ms var(--ease);
+  }
+  .grid-table td.unchecked a.c:hover,
+  .grid-table td.unchecked a.c:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: #ffffff;
+    transform: translateY(-1px);
+    outline: none;
+  }
   .grid-table td.unchecked .tag {
     font-family: var(--font-mono);
     font-size: 10px;
     color: inherit;
   }
+  .row-min.pending { color: var(--mute); font-weight: 500; }
   .grid-table td.est .p::after { content: " ~"; font-weight: 400; font-size: 12px; opacity: 0.75; }
   .grid-table td.partial .p-meta::before { content: "◔ "; }
 
@@ -1273,6 +1577,8 @@
   /* ==================== RESPONSIVE ==================== */
   @media (max-width: 1080px) {
     .deals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bag-calc-card { grid-template-columns: 1fr; gap: 16px; }
+    .bag-col-left { padding-right: 0; border-right: 0; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
   }
   @media (max-width: 720px) {
     .topbar-inner { padding: 10px 16px; gap: 10px; }
@@ -1281,6 +1587,9 @@
     .page { padding: 16px 14px 36px; }
     .deals-grid { grid-template-columns: 1fr; }
     .deal-card.is-as-upcoming { grid-column: auto; }
+    .bag-kpis { grid-template-columns: 1fr; gap: 10px; }
+    .bag-policy-grid { grid-template-columns: 1fr; gap: 8px; }
+    .bag-trip-select { max-width: 100%; width: 100%; }
     .search-input { width: 100%; }
     .search-wrap { flex: 1 1 100%; }
     .grid-table thead th:first-child,
@@ -1301,7 +1610,7 @@
       <a href="#deals">Best Deals</a>
       <a href="#trends">Price Trends</a>
       <a href="#matrix">Fare Matrix</a>
-      <a href="#other-flights">Direct Links</a>
+      <a href="#other-flights" id="nav-other-flights">Direct Links</a>
       <button type="button" class="nav-link" id="nav-sources">Sources</button>
     </nav>
     <div class="topbar-cta">
@@ -1378,12 +1687,117 @@
       <div class="sec-sub" id="matrix-count"></div>
     </div>
 
+    <!-- Visual Baggage Fee & Trip Cost Calculator -->
+    <div class="bag-calc-card" id="bag-calc" aria-label="Baggage fee and trip cost calculator">
+      <div class="bag-col-left">
+        <div class="bag-head">
+          <div>
+            <div class="bag-title">Baggage &amp; Party Cost Calculator</div>
+            <div class="bag-sub">All prices per person &amp; totals below update automatically</div>
+          </div>
+          <button type="button" class="bag-reset-btn" id="btn-bag-reset" style="display:none;">Reset bags</button>
+        </div>
+
+        <div class="bag-steppers">
+          <div class="bag-step-row">
+            <div class="bag-step-info">
+              <span class="bag-step-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <div>
+                <div class="bag-step-name">Travelers</div>
+                <div class="bag-step-desc">Multiplies all-in per-person fare + bags</div>
+              </div>
+            </div>
+            <div class="stepper" role="group" aria-label="Travelers count">
+              <button type="button" data-bag-step="people:-1" aria-label="Decrease travelers">−</button>
+              <span class="stepper-val" id="bag-val-people">1</span>
+              <button type="button" data-bag-step="people:1" aria-label="Increase travelers">+</button>
+            </div>
+          </div>
+
+          <div class="bag-step-row">
+            <div class="bag-step-info">
+              <span class="bag-step-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="7" width="12" height="14" rx="2"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><path d="M6 12h12"/></svg>
+              </span>
+              <div>
+                <div class="bag-step-name">Carry-on bags <span style="font-weight:400;color:var(--mute);">/ person</span></div>
+                <div class="bag-step-desc">$40/way on Allegiant &amp; Frontier · $0 on AA/DL/UA/WN/AS</div>
+              </div>
+            </div>
+            <div class="stepper" role="group" aria-label="Carry-on bags per person">
+              <button type="button" data-bag-step="carry:-1" aria-label="Decrease carry-on bags">−</button>
+              <span class="stepper-val" id="bag-val-carry">0</span>
+              <button type="button" data-bag-step="carry:1" aria-label="Increase carry-on bags">+</button>
+            </div>
+          </div>
+
+          <div class="bag-step-row">
+            <div class="bag-step-info">
+              <span class="bag-step-ico" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="15" rx="2"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M8 10v7"/><path d="M16 10v7"/></svg>
+              </span>
+              <div>
+                <div class="bag-step-name">Checked bags <span style="font-weight:400;color:var(--mute);">/ person</span></div>
+                <div class="bag-step-desc">$40 each way ($80 round trip) per checked bag</div>
+              </div>
+            </div>
+            <div class="stepper" role="group" aria-label="Checked bags per person">
+              <button type="button" data-bag-step="checked:-1" aria-label="Decrease checked bags">−</button>
+              <span class="stepper-val" id="bag-val-checked">0</span>
+              <button type="button" data-bag-step="checked:1" aria-label="Increase checked bags">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bag-col-right">
+        <div class="bag-preview-top">
+          <div>
+            <div class="bag-title">Live Trip Cost Breakdown</div>
+            <div class="bag-sub" id="bag-preview-sub">Cheapest upcoming weekend trip</div>
+          </div>
+          <select id="bag-trip-select" class="bag-trip-select" aria-label="Preview baggage fees on a route"></select>
+        </div>
+
+        <div class="bag-kpis">
+          <div>
+            <div class="bag-kpi-label">Price per person (incl. bags)</div>
+            <div class="bag-kpi-val is-accent" id="bag-kpi-pp">—</div>
+            <div class="bag-kpi-sub" id="bag-kpi-pp-sub">Select a route</div>
+          </div>
+          <div>
+            <div class="bag-kpi-label" id="bag-kpi-total-label">Total trip cost</div>
+            <div class="bag-kpi-val" id="bag-kpi-total">—</div>
+            <div class="bag-kpi-sub" id="bag-kpi-total-sub">Round trip estimate</div>
+          </div>
+        </div>
+
+        <div class="bag-bar-wrap">
+          <div class="bag-bar-track" aria-hidden="true">
+            <div class="bag-bar-fare" id="bag-bar-fare" style="width:100%"></div>
+            <div class="bag-bar-fees" id="bag-bar-fees" style="width:0%"></div>
+          </div>
+          <div class="bag-bar-legend" id="bag-bar-legend"></div>
+        </div>
+
+        <div class="bag-policy-grid" id="bag-policy-grid"></div>
+      </div>
+    </div>
+
     <div class="controls-card">
       <div class="controls-row">
         <div class="controls-left">
           <span class="seg" id="view" role="group" aria-label="Grid time grouping">
             <button type="button" data-v="weekend" class="on">By weekend</button>
             <button type="button" data-v="month">By month</button>
+          </span>
+
+          <span class="seg" id="tier-filter" role="group" aria-label="Filter route tier">
+            <button type="button" data-tier="all" class="on">All</button>
+            <button type="button" data-tier="core">Core</button>
+            <button type="button" data-tier="hub">Hubs</button>
           </span>
 
           <div class="search-wrap">
@@ -1404,15 +1818,6 @@
         </div>
 
         <div class="controls-right">
-          <label class="ctl">People
-            <select id="people"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
-          </label>
-          <label class="ctl">Carry-ons
-            <select id="carry"><option>0</option><option>1</option><option>2</option></select>
-          </label>
-          <label class="ctl">Checked
-            <select id="checked"><option>0</option><option>1</option><option>2</option></select>
-          </label>
           <label class="ctl">Sort
             <select id="sort">
               <option value="cheap">Cheapest first</option>
@@ -1423,7 +1828,7 @@
           </label>
           <label class="chk" id="empty-wrap" style="display:none;">
             <input type="checkbox" id="showEmpty">
-            <span id="empty-label">Show empty</span>
+            <span id="empty-label">Show pending</span>
           </label>
           <button type="button" class="btn btn-sm" id="btn-sources">Sources</button>
         </div>
@@ -1487,6 +1892,9 @@
       <div class="drawer-actions">
         <button type="button" class="btn btn-primary" id="btn-drawer-run">Start Refresh</button>
         <button type="button" class="btn" id="btn-drawer-rebuild">Rebuild Grid</button>
+      </div>
+      <div class="hint-note" style="margin-top:0;">
+        Priority queue: Core destinations (Priority 1) always refresh before Major Hubs (Priority 2), and capped fallback APIs stay reserved for Core routes.
       </div>
       <div class="drawer-msg" id="drawer-msg"></div>
     </section>
@@ -1588,6 +1996,7 @@ try {
       r.state = m ? m[2] : "";
       r.stateName = STATES[r.state] || r.state || "Other";
       r.airlines = r.airlines || [];
+      r.priority = Number(r.priority) || 1;
       r.trips = (r.t || []).map(a => {
         const [y,mo,d] = a[0].split("-").map(Number), dep = new Date(y, mo-1, d);
         const [y2,m2,d2] = a[1].split("-").map(Number), ret = new Date(y2, m2-1, d2);
@@ -1636,6 +2045,8 @@ try {
     search:    "",
     showEmpty: store.get("dsmShowEmpty") === "1",
     dealAirline: store.get("dsmDealAirline") || "ALL",
+    tier:      store.get("dsmTier") || "all",
+    bagSample: store.get("dsmBagSample") || "",
   };
 
   function bagsOneWay(airline) {
@@ -1686,8 +2097,9 @@ try {
     const out = {};
     for (const t of route.trips) {
       const k = t[colKey];
-      const c = out[k] || (out[k] = { best:null, n:0, unchecked:0, none:0 });
+      const c = out[k] || (out[k] = { best:null, sample:null, n:0, unchecked:0, none:0 });
       c.n++;
+      if (!c.sample) c.sample = t;
       if (t.status === "link") { c.best = t; continue; }
       if (t.status === "unchecked") { c.unchecked++; continue; }
       if (t.status === "none") { c.none++; continue; }
@@ -1842,6 +2254,105 @@ try {
     }).join("");
   }
 
+  function renderBagCalculator(allRows) {
+    const bounds = { people: [1, 6], carry: [0, 2], checked: [0, 2] };
+    $("#bag-val-people").textContent = String(state.people);
+    $("#bag-val-carry").textContent = String(state.carry);
+    $("#bag-val-checked").textContent = String(state.checked);
+
+    document.querySelectorAll("[data-bag-step]").forEach(btn => {
+      const [key, deltaStr] = btn.dataset.bagStep.split(":");
+      const delta = Number(deltaStr);
+      const [minV, maxV] = bounds[key];
+      const next = state[key] + delta;
+      btn.disabled = next < minV || next > maxV;
+    });
+
+    const resetBtn = $("#btn-bag-reset");
+    if (resetBtn) {
+      resetBtn.style.display = (state.carry > 0 || state.checked > 0) ? "inline-flex" : "none";
+    }
+
+    // Build real live trip options for the interactive cost preview
+    const tripOpts = [];
+    for (const x of allRows) {
+      let best = null;
+      for (const c of Object.values(x.c)) {
+        if (!c.best || !c.best.p) continue;
+        if (!best || c.best.p.pp < best.p.pp) best = c.best;
+      }
+      if (best) tripOpts.push({ route: x.r, trip: best });
+    }
+    tripOpts.sort((a, b) => a.trip.p.pp - b.trip.p.pp || a.route.cityName.localeCompare(b.route.cityName));
+
+    const sel = $("#bag-trip-select");
+    if (sel) {
+      const prev = state.bagSample || sel.value;
+      sel.innerHTML = tripOpts.length
+        ? tripOpts.map(({ route, trip }) => {
+            const carrier = trip.out.airline === trip.in.airline ? al(trip.out.airline) : `${al(trip.out.airline)}/${al(trip.in.airline)}`;
+            return `<option value="${esc(route.code)}">${esc(route.cityName)} (${esc(route.code)}) · ${esc(carrier)} · ${money(trip.p.fare)} base</option>`;
+          }).join("")
+        : `<option value="">No priced trips yet</option>`;
+
+      const chosen = tripOpts.find(o => o.route.code === prev) || tripOpts[0] || null;
+      if (chosen) {
+        sel.value = chosen.route.code;
+        const { route, trip } = chosen;
+        const p = trip.p;
+        const carrier = trip.out.airline === trip.in.airline
+          ? al(trip.out.airline)
+          : `${al(trip.out.airline)} / ${al(trip.in.airline)}`;
+        const farePct = p.pp > 0 ? Math.round((p.fare / p.pp) * 100) : 100;
+        const bagPct = 100 - farePct;
+
+        $("#bag-preview-sub").textContent = `${route.cityName} (${route.code}) · ${carrier} · ${short(trip.dep)} – ${short(trip.ret)}`;
+        $("#bag-kpi-pp").textContent = money(p.pp);
+        $("#bag-kpi-pp-sub").textContent = p.bags > 0
+          ? `${money(p.fare)} fare + ${money(p.bags)} bags`
+          : `${money(p.fare)} base fare · $0 bags`;
+
+        $("#bag-kpi-total-label").textContent = `Total trip cost (${state.people} ${state.people === 1 ? "traveler" : "travelers"})`;
+        $("#bag-kpi-total").textContent = money(p.total);
+        $("#bag-kpi-total-sub").textContent = p.bags > 0
+          ? `${money(p.fare * state.people)} fares + ${money(p.bags * state.people)} bags`
+          : `${state.people} × ${money(p.pp)} round trip`;
+
+        $("#bag-bar-fare").style.width = `${farePct}%`;
+        $("#bag-bar-fees").style.width = `${bagPct}%`;
+        $("#bag-bar-legend").innerHTML =
+          `<span class="bag-leg-item"><i class="bag-swatch" style="background:#0284c7"></i>Base fare <b>${money(p.fare)}</b> (${farePct}%)</span>` +
+          `<span class="bag-leg-item"><i class="bag-swatch" style="background:#d97706"></i>Baggage <b>${p.bags > 0 ? "+" + money(p.bags) : "$0"}</b>/pp${p.bags > 0 ? ` (${bagPct}%)` : ""}</span>`;
+      } else {
+        $("#bag-preview-sub").textContent = "Run a fare refresh to preview live trip costs";
+        $("#bag-kpi-pp").textContent = "—";
+        $("#bag-kpi-pp-sub").textContent = "No priced trips loaded";
+        $("#bag-kpi-total").textContent = "—";
+        $("#bag-kpi-total-sub").textContent = "—";
+        $("#bag-bar-fare").style.width = "100%";
+        $("#bag-bar-fees").style.width = "0%";
+        $("#bag-bar-legend").innerHTML = "";
+      }
+    }
+
+    // Carrier bag surcharge comparison (round-trip per person & party total)
+    const budgetBagPp = (state.carry + state.checked) * BAG_FEE * 2;
+    const stdBagPp = state.checked * BAG_FEE * 2;
+    const diffPp = budgetBagPp - stdBagPp;
+
+    $("#bag-policy-grid").innerHTML =
+      `<div>
+        <div class="bag-policy-head">Budget carriers (Allegiant · Frontier)</div>
+        <div class="bag-policy-val ${budgetBagPp > 0 ? "warn" : "ok"}">${budgetBagPp > 0 ? `+${money(budgetBagPp)} / person` : "$0 / person"}</div>
+        <div class="bag-policy-note">${budgetBagPp > 0 ? `${money(budgetBagPp * state.people)} total for ${state.people} · carry-on &amp; checked billed` : "Personal item only · no bag surcharges"}</div>
+      </div>` +
+      `<div>
+        <div class="bag-policy-head">Standard carriers (AA · DL · UA · WN · AS)</div>
+        <div class="bag-policy-val ${stdBagPp > 0 ? "warn" : "ok"}">${stdBagPp > 0 ? `+${money(stdBagPp)} / person` : "$0 / person"}</div>
+        <div class="bag-policy-note">${diffPp > 0 ? `Saves ${money(diffPp)}/pp (${money(diffPp * state.people)} total) on carry-ons` : (stdBagPp > 0 ? `${money(stdBagPp * state.people)} total for ${state.people} · checked bags only` : "Free carry-on included on all routes")}</div>
+      </div>`;
+  }
+
   function render() {
     if (!G || !G.routes) return;
     const trackedRoutes = G.routes.filter(r => !r.airlines.includes("LINK"));
@@ -1855,7 +2366,26 @@ try {
       x.min = ps.length ? Math.min(...ps) : Infinity;
     });
 
-    renderDeals(allRows);
+    const coreCount = trackedRoutes.filter(r => (r.priority || 1) === 1).length;
+    const hubCount = trackedRoutes.length - coreCount;
+    const tierBtns = $("#tier-filter");
+    if (tierBtns) {
+      const bAll = tierBtns.querySelector('[data-tier="all"]');
+      const bCore = tierBtns.querySelector('[data-tier="core"]');
+      const bHub = tierBtns.querySelector('[data-tier="hub"]');
+      if (bAll) bAll.textContent = `All · ${trackedRoutes.length}`;
+      if (bCore) bCore.textContent = `Core · ${coreCount}`;
+      if (bHub) bHub.textContent = `Hubs · ${hubCount}`;
+    }
+
+    const tierRows = state.tier === "core"
+      ? allRows.filter(x => (x.r.priority || 1) === 1)
+      : state.tier === "hub"
+        ? allRows.filter(x => (x.r.priority || 1) > 1)
+        : allRows;
+
+    renderBagCalculator(allRows);
+    renderDeals(tierRows);
 
     const trendsPayload = {
       origin: G.origin || "DSM",
@@ -1871,26 +2401,29 @@ try {
     window.dispatchEvent(new CustomEvent("dsm:grid-state", { detail: trendsPayload }));
 
     const isUpcoming = x => Boolean(x.r.start_date && x.r.start_date > (G.today || ""));
-    const emptyCount = allRows.filter(x => !Number.isFinite(x.min) && !isUpcoming(x)).length;
+    const emptyCount = tierRows.filter(x => !Number.isFinite(x.min) && !isUpcoming(x)).length;
     const emptyWrap = $("#empty-wrap");
     if (emptyCount > 0) {
       emptyWrap.style.display = "inline-flex";
-      $("#empty-label").textContent = `Show empty (${emptyCount})`;
+      $("#empty-label").textContent = `Show pending (${emptyCount})`;
     } else {
       emptyWrap.style.display = "none";
     }
 
     const q = state.search.trim().toLowerCase();
     const names = r => r.airlines.map(al).join(", ");
-    let rows = state.showEmpty ? allRows : allRows.filter(x => Number.isFinite(x.min) || isUpcoming(x));
+    // Auto-surface newly promoted Hubs when user explicitly selects the Hubs filter or searches for one
+    const includePending = state.showEmpty || state.tier === "hub" || q.length > 0;
+    let rows = includePending ? tierRows.slice() : tierRows.filter(x => Number.isFinite(x.min) || isUpcoming(x));
     if (q) {
       rows = rows.filter(x => {
-        const hay = `${x.r.cityName} ${x.r.code} ${x.r.state} ${x.r.stateName} ${names(x.r)}`.toLowerCase();
+        const tierWord = (x.r.priority || 1) > 1 ? "hub" : "core";
+        const hay = `${x.r.cityName} ${x.r.code} ${x.r.state} ${x.r.stateName} ${names(x.r)} ${tierWord}`.toLowerCase();
         return hay.includes(q);
       });
     }
     if (state.maxpp > 0) {
-      rows = rows.filter(x => x.min <= state.maxpp);
+      rows = rows.filter(x => x.min <= state.maxpp || (includePending && !Number.isFinite(x.min)));
     }
 
     const byCity = (a,b) => a.r.cityName.localeCompare(b.r.cityName);
@@ -1899,7 +2432,7 @@ try {
     else if (state.sort === "city") rows.sort(byCity);
     else rows.sort((a,b) => a.r.stateName.localeCompare(b.r.stateName) || byCity(a,b));
 
-    $("#matrix-count").textContent = `${rows.length} of ${trackedRoutes.length} tracked destinations shown · ${cols.length} ${colKey === "month" ? "months" : "weekends"}`;
+    $("#matrix-count").textContent = `${rows.length} of ${tierRows.length} ${state.tier === "core" ? "core" : state.tier === "hub" ? "hub" : "tracked"} destinations shown · ${cols.length} ${colKey === "month" ? "months" : "weekends"}`;
 
     const monthStarts = new Set();
     if (colKey === "weekend") {
@@ -1949,10 +2482,11 @@ try {
       const alNames = names(r);
       const sd = r.start_date && r.start_date > (G.today || "") ? dt(r.start_date) : null;
       const startLabel = sd ? ` · starts ${MON[sd.getMonth()]} ${sd.getDate()}, ${sd.getFullYear()}` : "";
-      const metaText = `${state.sort !== "state" && r.state ? r.state + " · " : ""}${alNames}${r.seasonal ? " · seasonal" : ""}${startLabel}`;
+      const tierLabel = (r.priority || 1) > 1 ? " · Hub" : "";
+      const metaText = `${state.sort !== "state" && r.state ? r.state + " · " : ""}${alNames}${r.seasonal ? " · seasonal" : ""}${tierLabel}${startLabel}`;
       const minHtml = Number.isFinite(x.min)
         ? `<span class="row-min ${rowMinClass(x.min)}">from ${money(x.min)}</span>`
-        : "";
+        : (!sd ? `<span class="row-min pending">queued</span>` : "");
       html += `<tr><th>
         <div class="city-line">
           <span class="city">${esc(r.cityName)}</span>
@@ -1967,11 +2501,17 @@ try {
       for (const k of cols) {
         const mCls = monthStarts.has(k) ? "month-start" : "";
         const c = x.c[k];
-        if (!c) { html += `<td class="${["none", mCls].filter(Boolean).join(" ")}"><div class="c"><span class="tag">—</span></div></td>`; continue; }
+        if (!c) { html += `<td class="${["none", mCls].filter(Boolean).join(" ")}" title="No nonstop flight"><div class="c"><span class="empty-dot" aria-hidden="true"></span></div></td>`; continue; }
 
         if (!c.best) {
           const cls = [c.unchecked ? "unchecked" : "none", mCls].filter(Boolean).join(" ");
-          html += `<td class="${cls}"><div class="c"><span class="tag">${c.unchecked ? "unchecked" : "—"}</span></div></td>`;
+          if (c.unchecked && c.sample) {
+            html += `<td class="${cls}"><a href="${bookingUrl(r.code, c.sample)}" target="_blank" rel="noopener" class="c" title="Queued for next refresh — click to check Google Flights"><span class="tag">pending ↗</span></a></td>`;
+          } else if (c.unchecked) {
+            html += `<td class="${cls}"><div class="c"><span class="tag">pending</span></div></td>`;
+          } else {
+            html += `<td class="${cls}" title="No nonstop flight"><div class="c"><span class="empty-dot" aria-hidden="true"></span></div></td>`;
+          }
           continue;
         }
         const t = c.best;
@@ -1992,8 +2532,8 @@ try {
           ? `<span class="foot-right">${money(t.p.total)} tot</span>`
           : isBest
             ? `<span class="foot-best">best</span>`
-            : hasBags
-              ? `<span class="foot-right">+bags</span>`
+            : (hasBags && t.p.bags > 0)
+              ? `<span class="foot-right">+${money(t.p.bags)} bag</span>`
               : "";
         html += `<td class="${cls}" data-r="${esc(r.code)}" data-k="${esc(k)}">
           <a href="${bookingUrl(r.code, t)}" target="_blank" rel="noopener">
@@ -2046,10 +2586,13 @@ try {
       clearBtn.onclick = () => {
         state.search = "";
         state.maxpp = 0;
+        state.tier = "all";
         $("#search").value = "";
         $("#search-clear").classList.remove("show");
         $("#maxpp").value = "0";
+        $("#tier-filter")?.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.tier === "all"));
         store.set("dsmMaxPp", "0");
+        store.set("dsmTier", "all");
         render();
       };
     }
@@ -2067,6 +2610,10 @@ try {
       </a>`;
     }
     $("#link-grid").innerHTML = linkHtml;
+    const otherSec = $("#other-flights");
+    if (otherSec) otherSec.style.display = linkRoutes.length > 0 ? "" : "none";
+    const navOther = $("#nav-other-flights");
+    if (navOther) navOther.style.display = linkRoutes.length > 0 ? "" : "none";
 
     header();
   }
@@ -2309,9 +2856,13 @@ try {
 
       const routeSel = $("#refresh-route");
       if (Array.isArray(data.routes) && routeSel.options.length === 0) {
-        routeSel.innerHTML = data.routes
-          .map(r => `<option value="${esc(r.code)}">${esc(r.city)} (${esc(r.code)})</option>`)
-          .join("");
+        const coreOpts = data.routes.filter(r => (r.priority || 1) === 1);
+        const hubOpts = data.routes.filter(r => (r.priority || 1) > 1);
+        const optHtml = list => list.map(r => `<option value="${esc(r.code)}">${esc(r.city)} (${esc(r.code)})</option>`).join("");
+        routeSel.innerHTML = hubOpts.length > 0
+          ? `<optgroup label="Core Destinations (Priority 1)">${optHtml(coreOpts)}</optgroup>` +
+            `<optgroup label="Major Hubs (Priority 2)">${optHtml(hubOpts)}</optgroup>`
+          : optHtml(data.routes);
       }
     } catch {
       serverAvailable = false;
@@ -2329,6 +2880,7 @@ try {
       const fresh = await res.json();
       G = hydrateGrid(fresh);
       render();
+      checkDeploySync();
     } catch {}
   }
 
@@ -2416,15 +2968,51 @@ try {
     render();
   };
 
-  for (const [id, k, sk] of [
-    ["#people","people","dsmPeople"],
-    ["#carry","carry","dsmCarry"],
-    ["#checked","checked","dsmChecked"],
-    ["#maxpp","maxpp","dsmMaxPp"],
-  ]) {
-    $(id).value = String(state[k]);
-    $(id).onchange = e => { state[k] = Number(e.target.value); store.set(sk, state[k]); render(); };
-  }
+  $("#tier-filter").querySelectorAll("button").forEach(b => {
+    b.classList.toggle("on", b.dataset.tier === state.tier);
+  });
+  $("#tier-filter").onclick = e => {
+    const b = e.target.closest("button[data-tier]"); if (!b) return;
+    $("#tier-filter").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+    state.tier = b.dataset.tier;
+    store.set("dsmTier", state.tier);
+    render();
+  };
+
+  $("#maxpp").value = String(state.maxpp);
+  $("#maxpp").onchange = e => {
+    state.maxpp = Number(e.target.value);
+    store.set("dsmMaxPp", state.maxpp);
+    render();
+  };
+
+  const bagStorageKeys = { people: "dsmPeople", carry: "dsmCarry", checked: "dsmChecked" };
+  const bagBounds = { people: [1, 6], carry: [0, 2], checked: [0, 2] };
+  document.querySelectorAll("[data-bag-step]").forEach(btn => {
+    btn.onclick = () => {
+      const [key, deltaStr] = btn.dataset.bagStep.split(":");
+      const [minV, maxV] = bagBounds[key];
+      const next = Math.max(minV, Math.min(maxV, state[key] + Number(deltaStr)));
+      if (next === state[key]) return;
+      state[key] = next;
+      store.set(bagStorageKeys[key], String(next));
+      render();
+    };
+  });
+
+  $("#btn-bag-reset").onclick = () => {
+    state.carry = 0;
+    state.checked = 0;
+    store.set("dsmCarry", "0");
+    store.set("dsmChecked", "0");
+    render();
+  };
+
+  $("#bag-trip-select").onchange = e => {
+    state.bagSample = e.target.value;
+    store.set("dsmBagSample", state.bagSample);
+    render();
+  };
 
   $("#sort").value = state.sort;
   $("#sort").onchange = e => { state.sort = e.target.value; store.set("dsmSort", state.sort); render(); };
