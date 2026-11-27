@@ -53,7 +53,7 @@ export class MockProvider extends BaseProvider {
   async cheapestRoundTrip(origin, dest, depIso, retIso, airlines) {
     const h = md5Int(`RT|${origin}|${dest}|${depIso}|${retIso}`);
     if (h % 10 === 0) return null;
-    const legacy = airlines.filter((a) => ["UA", "AA", "DL"].includes(a));
+    const legacy = airlines.filter((a) => ["UA", "AA", "DL", "AS"].includes(a));
     const airline = legacy[h % legacy.length] || "UA";
     const hour = 6 + (h % 14);
     const min = ["00", "15", "30", "45"][h % 4];

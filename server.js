@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import path from "node:path";
 import express from "express";
-import { ROOT, buildSite, loadConfig, loadRoutes } from "./src/build.js";
+import { ROOT, buildRouteHistory, buildSite, loadConfig, loadRoutes } from "./src/build.js";
 import { loadHealth, resetProviderCircuit, saveHealth } from "./src/health.js";
 import { PROVIDER_FACTORIES } from "./src/providers/index.js";
 import { getProviderStatusSnapshot, runRefresh } from "./src/refresh.js";
@@ -147,6 +147,23 @@ app.get("/api/grid", (_req, res) => {
 app.get("/api/grid/compact", (_req, res) => {
   res.setHeader("Cache-Control", "no-store");
   res.sendFile(path.join(PUBLIC_DIR, "grid.compact.json"));
+});
+
+app.get("/api/history/:code", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  const code = String(req.params.code || "").trim().toUpperCase();
+  if (!/^[A-Z]{3}$/.test(code)) {
+    return res.status(400).json({ error: "Invalid airport code." });
+  }
+  try {
+    const history = buildRouteHistory(code);
+    if (!history) {
+      return res.status(404).json({ error: "Route not found." });
+    }
+    return res.json(history);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 app.get("/api/providers", (_req, res) => {

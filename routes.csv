@@ -1,4 +1,4 @@
-code,city,airlines,seasonal,fly_days
+code,city,airlines,seasonal,fly_days,start_date
 ATL,Atlanta GA,DL,no,
 AUS,Austin TX,G4,yes,
 BOS,Boston MA,G4,yes,
@@ -29,6 +29,7 @@ PHX,Phoenix AZ,AA|WN|F9,no,
 AZA,Phoenix-Mesa AZ,G4,no,
 PIE,St. Petersburg FL,G4,no,
 RSW,Fort Myers FL,G4,yes,
+SEA,Seattle WA,AS,no,,2027-06-24
 SFB,Orlando-Sanford FL,G4,no,
 SNA,Orange County CA,G4,yes,
 SRQ,Sarasota FL,G4,yes,

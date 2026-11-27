@@ -11,7 +11,13 @@
     "lint": "node --check server.js && node --check src/build.js && node --check src/health.js && node --check src/refresh.js && node --check src/providers/base.js && node --check src/providers/google_flights.js && node --check src/providers/travelpayouts.js && node --check src/providers/allegiant.js && node --check src/providers/frontier.js && node --check src/providers/ignav.js && node --check src/providers/serpapi.js && node --check src/providers/mock.js && node --check src/providers/index.js"
   },
   "dependencies": {
+    "@types/react": "^19.3.3",
+    "@types/react-dom": "^19.3.0",
+    "esbuild": "^0.28.2",
     "express": "^5.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "recharts": "^3.11.1",
     "smol-toml": "^1.9.1"
   }
 }

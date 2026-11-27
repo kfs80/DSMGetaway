@@ -654,6 +654,7 @@ export async function runRefresh(options = {}) {
               pick = rest;
             }
             for (const [dep, ret] of pick) {
+              if (r.start_date && formatDate(dep) < r.start_date) continue;
               const k = rtKey(r.code, dep, ret);
               if (!isFresh(cache[k], dep, cfg, today)) {
                 rtTodo.push({ key: k, route: r, dep, ret });

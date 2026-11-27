@@ -24,6 +24,7 @@ export const AIRLINE_NAMES = {
   Breeze: "MX",
   Spirit: "NK",
   Alaska: "AS",
+  Horizon: "AS",
   JetBlue: "B6",
   Avelo: "XP",
 };
@@ -57,6 +58,7 @@ export class BlockedError extends ProviderError {
 export function normalizeAirlineCode(raw) {
   const s = String(raw || "").trim();
   if (!s) return null;
+  if (s.toUpperCase() === "QX") return "AS";
   if (/^[A-Z0-9]{2}$/.test(s)) return s;
   const lower = s.toLowerCase();
   for (const [name, code] of Object.entries(AIRLINE_NAMES)) {
