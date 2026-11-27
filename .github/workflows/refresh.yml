@@ -8,6 +8,7 @@ on:
       - "src/**"
       - "routes.csv"
       - "config.toml"
+      - "data/fares.json"
       - "package.json"
       - ".github/workflows/refresh.yml"
   schedule:

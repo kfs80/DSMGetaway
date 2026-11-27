@@ -178,6 +178,18 @@ function parseSafeGitHubPagesUrl(raw) {
   }
   if (u.protocol !== "https:") return null;
   if (u.username || u.password || u.port) return null;
+
+  // Allow pasting a github.com/<owner>/<repo> URL and auto-normalize to Pages URL
+  if (/^(?:www\.)?github\.com$/i.test(u.hostname)) {
+    const parts = u.pathname.split("/").filter(Boolean);
+    if (parts.length < 2) return null;
+    const owner = parts[0];
+    const repo = parts[1].replace(/\.git$/i, "");
+    if (!/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/i.test(owner)) return null;
+    if (!/^[a-z0-9._-]{1,100}$/i.test(repo)) return null;
+    return `https://${owner.toLowerCase()}.github.io/${repo}/`;
+  }
+
   if (!/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?\.github\.io$/i.test(u.hostname)) {
     return null;
   }
@@ -187,13 +199,32 @@ function parseSafeGitHubPagesUrl(raw) {
   return `${u.origin}${cleanPath}`;
 }
 
+function extractGitHubRepoFromPagesUrl(pagesUrl) {
+  try {
+    const u = new URL(pagesUrl);
+    const owner = u.hostname.replace(/\.github\.io$/i, "");
+    const parts = u.pathname.split("/").filter(Boolean);
+    if (!owner || parts.length === 0) return null;
+    const repo = parts[0];
+    if (!/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/i.test(owner)) return null;
+    if (!/^[a-z0-9._-]{1,100}$/i.test(repo)) return null;
+    return { owner, repo };
+  } catch {
+    return null;
+  }
+}
+
 async function fetchJsonTimeout(url, timeoutMs = 6000) {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       signal: ac.signal,
-      headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+      headers: {
+        Accept: "application/json",
+        "Cache-Control": "no-cache",
+        "User-Agent": "DSM-Weekend-Getaways-SyncCheck",
+      },
     });
     if (!res.ok) return { ok: false, status: res.status, data: null };
     const text = await res.text();
@@ -204,6 +235,24 @@ async function fetchJsonTimeout(url, timeoutMs = 6000) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function checkActivePagesWorkflow(pagesUrl) {
+  const repoInfo = extractGitHubRepoFromPagesUrl(pagesUrl);
+  if (!repoInfo) return null;
+  const apiUrl = `https://api.github.com/repos/${encodeURIComponent(repoInfo.owner)}/${encodeURIComponent(repoInfo.repo)}/actions/runs?per_page=3`;
+  const runsRes = await fetchJsonTimeout(apiUrl, 2500);
+  if (!runsRes.ok || !Array.isArray(runsRes.data?.workflow_runs)) return null;
+  const active = runsRes.data.workflow_runs.find(
+    (r) => r && (r.status === "queued" || r.status === "in_progress")
+  );
+  if (!active) return null;
+  return {
+    name: active.name || "GitHub Actions",
+    status: active.status,
+    sha: active.head_sha ? active.head_sha.slice(0, 7) : null,
+    url: active.html_url || null,
+  };
 }
 
 app.get("/api/deploy-status", async (req, res) => {
@@ -253,23 +302,43 @@ app.get("/api/deploy-status", async (req, res) => {
       let status = "behind";
       let label = "Out of sync";
       let detail = "Your live GitHub Pages site is running a different build than this workspace.";
+      let activeWorkflow = null;
 
       if (local && remote.buildId === local.buildId) {
         status = "synced";
         label = "Synced";
         detail = "GitHub Pages matches this workspace's latest build and fare data.";
       } else if (
+        local?.uiHash &&
+        remote.uiHash &&
+        remote.uiHash === local.uiHash &&
+        local.today &&
+        remote.today &&
+        local.today !== remote.today
+      ) {
+        status = "synced";
+        label = "Synced";
+        detail = "GitHub Pages matches your latest UI. Daily fare rollover refreshes at 6 AM CT.";
+      } else if (
         local?.generated &&
         remote.generated &&
-        remote.generated > local.generated
+        remote.generated > local.generated &&
+        (!local?.uiHash || !remote.uiHash || remote.uiHash === local.uiHash)
       ) {
         status = "ahead";
         label = "Pages newer";
         detail = "GitHub Pages has a newer scheduled fare refresh than this local workspace.";
       } else {
-        status = "behind";
-        label = "Out of sync";
-        detail = "Workspace has unpublished changes not yet live on GitHub Pages. Push to GitHub to deploy.";
+        activeWorkflow = await checkActivePagesWorkflow(pagesUrl);
+        if (activeWorkflow) {
+          status = "deploying";
+          label = "Deploying…";
+          detail = `GitHub Actions (${activeWorkflow.name}) is building and publishing your latest push to GitHub Pages (~30–60s).`;
+        } else {
+          status = "behind";
+          label = "Out of sync";
+          detail = "Workspace has unpublished changes not yet live on GitHub Pages. Push to GitHub to deploy.";
+        }
       }
 
       return res.json({
@@ -278,6 +347,7 @@ app.get("/api/deploy-status", async (req, res) => {
         detail,
         local,
         remote,
+        activeWorkflow,
         pagesUrl,
         checkedAt: new Date().toISOString(),
       });

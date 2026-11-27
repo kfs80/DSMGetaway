@@ -152,6 +152,8 @@
   .sync-btn.st-behind .sync-mark { background: #d97706; }
   .sync-btn.st-ahead { border-color: #bfdbfe; background: #eff6ff; color: #1e40af; }
   .sync-btn.st-ahead .sync-mark { background: #2563eb; }
+  .sync-btn.st-deploying { border-color: #bae6fd; background: #f0f9ff; color: #0369a1; }
+  .sync-btn.st-deploying .sync-mark { background: #0284c7; }
   .sync-btn.st-err { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
   .sync-btn.st-err .sync-mark { background: #dc2626; }
 
@@ -3095,6 +3097,32 @@ try {
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   }
 
+  let lastSyncCheckAt = 0;
+  let syncCheckInFlight = false;
+  let syncPollTimer = null;
+
+  function scheduleSyncPoll(status) {
+    if (syncPollTimer) {
+      clearTimeout(syncPollTimer);
+      syncPollTimer = null;
+    }
+    // Poll every 15s while deploying or behind so the badge flips to Synced automatically after a push;
+    // otherwise check every 2m while the page is visible.
+    const delayMs =
+      status === "deploying" || status === "behind"
+        ? 15 * 1000
+        : isGitHubPagesHost
+          ? 3 * 60 * 1000
+          : 2 * 60 * 1000;
+    syncPollTimer = setTimeout(() => {
+      if (document.visibilityState === "visible") {
+        checkDeploySync({ silent: true });
+      } else {
+        scheduleSyncPoll(status);
+      }
+    }, delayMs);
+  }
+
   function renderSyncUI(info) {
     const btn = $("#btn-sync-status");
     const labelEl = $("#sync-btn-label");
@@ -3108,6 +3136,7 @@ try {
     if (info.status === "synced") btn.classList.add("st-synced");
     else if (info.status === "behind") btn.classList.add("st-behind");
     else if (info.status === "ahead") btn.classList.add("st-ahead");
+    else if (info.status === "deploying") btn.classList.add("st-deploying");
     else if (info.status === "unreachable" || info.status === "invalid_url") btn.classList.add("st-err");
 
     labelEl.textContent = info.label || "Status";
@@ -3128,24 +3157,38 @@ try {
     const footParts = [];
     if (info.status === "ahead" && isGitHubPagesHost) {
       footParts.push(`<button type="button" class="btn btn-primary btn-sm" id="btn-sync-reload">Reload latest deploy</button>`);
+    } else if (info.activeWorkflow?.url && /^https:\/\/github\.com\//i.test(info.activeWorkflow.url)) {
+      footParts.push(`<a href="${esc(info.activeWorkflow.url)}" target="_blank" rel="noopener" class="sync-link">View deploy run ↗</a>`);
     } else if (info.pagesUrl && /^https:\/\/[a-z0-9-]+\.github\.io\//i.test(info.pagesUrl)) {
       footParts.push(`<a href="${esc(info.pagesUrl)}" target="_blank" rel="noopener" class="sync-link">Open GitHub Pages ↗</a>`);
     } else {
       footParts.push(`<span style="color:var(--mute);">Checked ${esc(fmtShortTime(info.checkedAt))}</span>`);
     }
-    if (info.checkedAt && footParts.length === 1 && info.pagesUrl) {
+    if (info.checkedAt && footParts.length === 1 && (info.pagesUrl || info.activeWorkflow?.url)) {
       footParts.push(`<span style="color:var(--mute);">Checked ${esc(fmtShortTime(info.checkedAt))}</span>`);
     }
     footEl.innerHTML = footParts.join("");
 
     const reloadBtn = $("#btn-sync-reload");
-    if (reloadBtn) reloadBtn.onclick = () => window.location.reload();
+    if (reloadBtn) {
+      reloadBtn.onclick = () => {
+        const u = new URL(window.location.href);
+        u.searchParams.set("v", info.remote?.buildId || String(Date.now()));
+        window.location.replace(u.toString());
+      };
+    }
+
+    scheduleSyncPoll(info.status);
   }
 
-  async function checkDeploySync() {
+  async function checkDeploySync(opts = {}) {
+    if (syncCheckInFlight) return;
+    syncCheckInFlight = true;
+    lastSyncCheckAt = Date.now();
+
     const checkBtn = $("#btn-sync-check");
     if (checkBtn) checkBtn.disabled = true;
-    $("#sync-btn-label").textContent = "Checking…";
+    if (!opts.silent) $("#sync-btn-label").textContent = "Checking…";
 
     try {
       if (isGitHubPagesHost) {
@@ -3157,7 +3200,7 @@ try {
           renderSyncUI({
             status: "ahead",
             label: "Update ready",
-            detail: "A newer GitHub Pages deployment is live. Reload to view the latest fares and UI.",
+            detail: "A newer GitHub Pages deployment is live. Click below to bypass browser cache and load it.",
             local,
             remote,
             pagesUrl: window.location.href,
@@ -3177,13 +3220,26 @@ try {
         return;
       }
 
-      const savedUrl = (store.get("dsmGhPagesUrl") || G?.github_pages_url || "").trim();
+      const storedOverride = (store.get("dsmGhPagesUrl") || "").trim();
+      const configuredDefault = (G?.github_pages_url || "").trim();
+      let targetUrl = storedOverride || configuredDefault;
       const inputEl = $("#sync-url-input");
-      if (inputEl && !inputEl.value && savedUrl) inputEl.value = savedUrl;
+      if (inputEl && !inputEl.value && targetUrl) inputEl.value = targetUrl;
 
-      const qs = savedUrl ? `?url=${encodeURIComponent(savedUrl)}` : "";
-      const res = await fetch(`/api/deploy-status${qs}`, { cache: "no-store" });
-      const data = await res.json();
+      let qs = targetUrl ? `?url=${encodeURIComponent(targetUrl)}` : "";
+      let res = await fetch(`/api/deploy-status${qs}`, { cache: "no-store" });
+      let data = await res.json();
+
+      // Self-heal if a stale/invalid localStorage override blocks a valid config.toml Pages URL
+      if (data.status === "invalid_url" && storedOverride && configuredDefault && storedOverride !== configuredDefault) {
+        store.set("dsmGhPagesUrl", "");
+        if (inputEl) inputEl.value = configuredDefault;
+        res = await fetch(`/api/deploy-status?url=${encodeURIComponent(configuredDefault)}`, { cache: "no-store" });
+        data = await res.json();
+      } else if (data.pagesUrl && inputEl && !inputEl.matches(":focus")) {
+        inputEl.value = data.pagesUrl;
+      }
+
       renderSyncUI(data);
     } catch {
       renderSyncUI({
@@ -3196,6 +3252,7 @@ try {
         checkedAt: new Date().toISOString(),
       });
     } finally {
+      syncCheckInFlight = false;
       if (checkBtn) checkBtn.disabled = false;
     }
   }
@@ -3211,6 +3268,9 @@ try {
     const willOpen = !pop.classList.contains("open");
     pop.classList.toggle("open", willOpen);
     $("#btn-sync-status").setAttribute("aria-expanded", String(willOpen));
+    if (willOpen && Date.now() - lastSyncCheckAt > 5000) {
+      checkDeploySync({ silent: true });
+    }
   };
   $("#sync-popover").onclick = e => e.stopPropagation();
   document.addEventListener("click", closeSyncPopover);
@@ -3229,6 +3289,15 @@ try {
     }
   };
 
+  window.addEventListener("focus", () => {
+    if (Date.now() - lastSyncCheckAt > 10000) checkDeploySync({ silent: true });
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && Date.now() - lastSyncCheckAt > 10000) {
+      checkDeploySync({ silent: true });
+    }
+  });
+
   legend();
   if (G) render();
   else $("#sub").textContent = "No data yet — click Refresh Fares or run the refresh workflow.";
@@ -3236,9 +3305,6 @@ try {
   loadProviders();
   connectEventStream();
   checkDeploySync();
-  if (isGitHubPagesHost) {
-    setInterval(checkDeploySync, 5 * 60 * 1000);
-  }
 
 } catch (err) {
   const e = document.getElementById("err");

@@ -566,10 +566,31 @@ export function buildTrendsBundle(force = false) {
   });
 }
 
+export function computeUiHash({ template }) {
+  const hash = crypto.createHash("sha256");
+  hash.update(template);
+  const bundlePath = path.join(OUT_DIR, "trends-chart.js");
+  if (fs.existsSync(bundlePath)) {
+    hash.update(fs.readFileSync(bundlePath));
+  }
+  for (const rel of ["routes.csv", "config.toml"]) {
+    const p = path.join(ROOT, rel);
+    if (fs.existsSync(p)) hash.update(fs.readFileSync(p));
+  }
+  return hash.digest("hex").slice(0, 10);
+}
+
 export function computeBuildId({ compactGrid, template }) {
   const hash = crypto.createHash("sha256");
-  // Hash deterministic content (exclude volatile `generated` timestamp)
-  const { generated: _ignored, build_id: _b, ...stableGrid } = compactGrid;
+  // Hash deterministic content (exclude volatile timestamps, run counters, and metadata fields)
+  const {
+    generated: _ignored,
+    build_id: _b,
+    ui_hash: _u,
+    run: _r,
+    github_pages_url: _g,
+    ...stableGrid
+  } = compactGrid;
   hash.update(JSON.stringify(stableGrid));
   hash.update(template);
   const bundlePath = path.join(OUT_DIR, "trends-chart.js");
@@ -605,12 +626,15 @@ export function buildSite(options = {}) {
     "utf8"
   );
   const buildId = computeBuildId({ compactGrid, template });
+  const uiHash = computeUiHash({ template });
   const githubPagesUrl = String(
     process.env.GITHUB_PAGES_URL || cfg.deploy?.github_pages_url || ""
   ).trim();
 
   grid.build_id = buildId;
   compactGrid.build_id = buildId;
+  grid.ui_hash = uiHash;
+  compactGrid.ui_hash = uiHash;
   if (githubPagesUrl) {
     grid.github_pages_url = githubPagesUrl;
     compactGrid.github_pages_url = githubPagesUrl;
@@ -624,6 +648,7 @@ export function buildSite(options = {}) {
 
   const buildMeta = {
     buildId,
+    uiHash,
     generated: grid.generated,
     today: grid.today,
     commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA.slice(0, 7) : null,
