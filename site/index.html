@@ -113,7 +113,142 @@
   }
   .topbar-cta {
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
   }
+
+  /* GitHub Pages Sync Indicator */
+  .sync-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-soft);
+    font: 600 12px/1.2 var(--font-sans);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: border-color 140ms var(--ease), background-color 140ms var(--ease);
+  }
+  .sync-btn:hover {
+    border-color: var(--line-strong);
+    background: var(--surface-subtle);
+  }
+  .sync-mark {
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: #94a3b8;
+    flex-shrink: 0;
+  }
+  .sync-btn.st-synced { border-color: #a7f3d0; background: #ecfdf5; color: #065f46; }
+  .sync-btn.st-synced .sync-mark { background: #10b981; }
+  .sync-btn.st-behind { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+  .sync-btn.st-behind .sync-mark { background: #d97706; }
+  .sync-btn.st-ahead { border-color: #bfdbfe; background: #eff6ff; color: #1e40af; }
+  .sync-btn.st-ahead .sync-mark { background: #2563eb; }
+  .sync-btn.st-err { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+  .sync-btn.st-err .sync-mark { background: #dc2626; }
+
+  .sync-pop {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(355px, calc(100vw - 28px));
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-md);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+    padding: 14px 16px;
+    z-index: 45;
+    display: none;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .sync-pop.open { display: flex; }
+  .sync-pop-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .sync-pop-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .sync-pop-detail {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+  .sync-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 9px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    font-size: 11.5px;
+  }
+  .sync-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--mute);
+  }
+  .sync-row b {
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    text-align: right;
+  }
+  .sync-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sync-form label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--mute);
+  }
+  .sync-input-row {
+    display: flex;
+    gap: 6px;
+  }
+  .sync-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    font: 400 12px/1.2 var(--font-mono);
+    color: var(--ink);
+    background: var(--surface);
+  }
+  .sync-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .sync-pop-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11.5px;
+  }
+  .sync-link {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .sync-link:hover { text-decoration: underline; }
 
   /* ==================== MAIN CONTAINER ==================== */
   .page {
@@ -1140,8 +1275,9 @@
     .deals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 720px) {
-    .topbar-inner { padding: 10px 16px; gap: 12px; }
+    .topbar-inner { padding: 10px 16px; gap: 10px; }
     .topnav { display: none; }
+    .sync-btn .sync-prefix { display: none; }
     .page { padding: 16px 14px 36px; }
     .deals-grid { grid-template-columns: 1fr; }
     .deal-card.is-as-upcoming { grid-column: auto; }
@@ -1169,6 +1305,27 @@
       <button type="button" class="nav-link" id="nav-sources">Sources</button>
     </nav>
     <div class="topbar-cta">
+      <button type="button" class="sync-btn" id="btn-sync-status" aria-expanded="false" aria-controls="sync-popover" title="Check GitHub Pages deployment sync">
+        <span class="sync-mark" aria-hidden="true"></span>
+        <span class="sync-prefix">Pages ·</span>
+        <span id="sync-btn-label">Checking…</span>
+      </button>
+      <div class="sync-pop" id="sync-popover" role="region" aria-label="GitHub Pages sync status">
+        <div class="sync-pop-head">
+          <span class="sync-pop-title" id="sync-pop-title">GitHub Pages Sync</span>
+          <button type="button" class="btn btn-sm" id="btn-sync-check">Check Now</button>
+        </div>
+        <div class="sync-pop-detail" id="sync-pop-detail">Checking latest deployment status…</div>
+        <div class="sync-rows" id="sync-pop-rows"></div>
+        <div class="sync-form" id="sync-url-form">
+          <label for="sync-url-input">GitHub Pages URL</label>
+          <div class="sync-input-row">
+            <input type="url" id="sync-url-input" class="sync-input" placeholder="https://user.github.io/repo/">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-sync-save">Save</button>
+          </div>
+        </div>
+        <div class="sync-pop-foot" id="sync-pop-foot"></div>
+      </div>
       <button type="button" class="btn btn-primary" id="btn-refresh">Refresh Fares</button>
     </div>
   </div>
@@ -2336,12 +2493,164 @@ try {
     }
   };
 
+  // ======================= GITHUB PAGES SYNC INDICATOR =======================
+  const isGitHubPagesHost = /\.github\.io$/i.test(window.location.hostname);
+
+  function fmtShortTime(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return String(iso);
+    const diffMin = Math.round((Date.now() - d.getTime()) / 60000);
+    if (diffMin < 1) return "just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffMin < 1440) return `${Math.round(diffMin / 60)}h ago`;
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
+  function renderSyncUI(info) {
+    const btn = $("#btn-sync-status");
+    const labelEl = $("#sync-btn-label");
+    const titleEl = $("#sync-pop-title");
+    const detailEl = $("#sync-pop-detail");
+    const rowsEl = $("#sync-pop-rows");
+    const footEl = $("#sync-pop-foot");
+    const formEl = $("#sync-url-form");
+
+    btn.className = "sync-btn";
+    if (info.status === "synced") btn.classList.add("st-synced");
+    else if (info.status === "behind") btn.classList.add("st-behind");
+    else if (info.status === "ahead") btn.classList.add("st-ahead");
+    else if (info.status === "unreachable" || info.status === "invalid_url") btn.classList.add("st-err");
+
+    labelEl.textContent = info.label || "Status";
+    titleEl.textContent = `GitHub Pages · ${info.label || "Status"}`;
+    detailEl.textContent = info.detail || "";
+
+    const localBuild = info.local?.buildId || G?.build_id || "—";
+    const localTime = fmtShortTime(info.local?.generated || G?.generated);
+    const remoteBuild = info.remote?.buildId || (info.status === "behind" ? "older build" : "—");
+    const remoteTime = fmtShortTime(info.remote?.generated);
+
+    rowsEl.innerHTML =
+      `<div class="sync-row"><span>${isGitHubPagesHost ? "Loaded page" : "Workspace build"}</span><b>#${esc(localBuild)} · ${esc(localTime)}</b></div>` +
+      `<div class="sync-row"><span>GitHub Pages live</span><b>${remoteBuild !== "—" ? (remoteBuild.startsWith("older") ? esc(remoteBuild) : `#${esc(remoteBuild)}`) : "—"}${remoteTime !== "—" ? ` · ${esc(remoteTime)}` : ""}</b></div>`;
+
+    formEl.style.display = isGitHubPagesHost ? "none" : "flex";
+
+    const footParts = [];
+    if (info.status === "ahead" && isGitHubPagesHost) {
+      footParts.push(`<button type="button" class="btn btn-primary btn-sm" id="btn-sync-reload">Reload latest deploy</button>`);
+    } else if (info.pagesUrl && /^https:\/\/[a-z0-9-]+\.github\.io\//i.test(info.pagesUrl)) {
+      footParts.push(`<a href="${esc(info.pagesUrl)}" target="_blank" rel="noopener" class="sync-link">Open GitHub Pages ↗</a>`);
+    } else {
+      footParts.push(`<span style="color:var(--mute);">Checked ${esc(fmtShortTime(info.checkedAt))}</span>`);
+    }
+    if (info.checkedAt && footParts.length === 1 && info.pagesUrl) {
+      footParts.push(`<span style="color:var(--mute);">Checked ${esc(fmtShortTime(info.checkedAt))}</span>`);
+    }
+    footEl.innerHTML = footParts.join("");
+
+    const reloadBtn = $("#btn-sync-reload");
+    if (reloadBtn) reloadBtn.onclick = () => window.location.reload();
+  }
+
+  async function checkDeploySync() {
+    const checkBtn = $("#btn-sync-check");
+    if (checkBtn) checkBtn.disabled = true;
+    $("#sync-btn-label").textContent = "Checking…";
+
+    try {
+      if (isGitHubPagesHost) {
+        // Running directly on *.github.io — compare loaded page build against live build-meta.json
+        const res = await fetch(`build-meta.json?t=${Date.now()}`, { cache: "no-store" });
+        const remote = res.ok ? await res.json() : null;
+        const local = { buildId: G?.build_id || null, generated: G?.generated || null };
+        if (remote && local.buildId && remote.buildId !== local.buildId) {
+          renderSyncUI({
+            status: "ahead",
+            label: "Update ready",
+            detail: "A newer GitHub Pages deployment is live. Reload to view the latest fares and UI.",
+            local,
+            remote,
+            pagesUrl: window.location.href,
+            checkedAt: new Date().toISOString(),
+          });
+        } else {
+          renderSyncUI({
+            status: "synced",
+            label: "Synced",
+            detail: "You are viewing the latest published GitHub Pages deployment.",
+            local,
+            remote: remote || local,
+            pagesUrl: window.location.href,
+            checkedAt: new Date().toISOString(),
+          });
+        }
+        return;
+      }
+
+      const savedUrl = (store.get("dsmGhPagesUrl") || G?.github_pages_url || "").trim();
+      const inputEl = $("#sync-url-input");
+      if (inputEl && !inputEl.value && savedUrl) inputEl.value = savedUrl;
+
+      const qs = savedUrl ? `?url=${encodeURIComponent(savedUrl)}` : "";
+      const res = await fetch(`/api/deploy-status${qs}`, { cache: "no-store" });
+      const data = await res.json();
+      renderSyncUI(data);
+    } catch {
+      renderSyncUI({
+        status: "unlinked",
+        label: "Local build",
+        detail: "Live sync check is unavailable in offline mode.",
+        local: { buildId: G?.build_id || null, generated: G?.generated || null },
+        remote: null,
+        pagesUrl: null,
+        checkedAt: new Date().toISOString(),
+      });
+    } finally {
+      if (checkBtn) checkBtn.disabled = false;
+    }
+  }
+
+  function closeSyncPopover() {
+    $("#sync-popover").classList.remove("open");
+    $("#btn-sync-status").setAttribute("aria-expanded", "false");
+  }
+
+  $("#btn-sync-status").onclick = e => {
+    e.stopPropagation();
+    const pop = $("#sync-popover");
+    const willOpen = !pop.classList.contains("open");
+    pop.classList.toggle("open", willOpen);
+    $("#btn-sync-status").setAttribute("aria-expanded", String(willOpen));
+  };
+  $("#sync-popover").onclick = e => e.stopPropagation();
+  document.addEventListener("click", closeSyncPopover);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeSyncPopover(); });
+
+  $("#btn-sync-check").onclick = () => checkDeploySync();
+  $("#btn-sync-save").onclick = () => {
+    const val = ($("#sync-url-input").value || "").trim();
+    store.set("dsmGhPagesUrl", val);
+    checkDeploySync();
+  };
+  $("#sync-url-input").onkeydown = e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      $("#btn-sync-save").click();
+    }
+  };
+
   legend();
   if (G) render();
   else $("#sub").textContent = "No data yet — click Refresh Fares or run the refresh workflow.";
 
   loadProviders();
   connectEventStream();
+  checkDeploySync();
+  if (isGitHubPagesHost) {
+    setInterval(checkDeploySync, 5 * 60 * 1000);
+  }
 
 } catch (err) {
   const e = document.getElementById("err");

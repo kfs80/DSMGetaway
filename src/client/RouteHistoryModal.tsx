@@ -334,18 +334,19 @@ export function RouteHistoryModal() {
     const controller = new AbortController();
     setLoading(true);
 
-    fetch(`/api/history/${encodeURIComponent(payload.route.code)}`, {
-      signal: controller.signal,
-    })
-      .then((res) => (res.ok ? res.json() : null))
+    const code = encodeURIComponent(payload.route.code);
+    fetch(`/api/history/${code}`, { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : fetch(`history/${code}.json`, { signal: controller.signal }).then((r) => (r.ok ? r.json() : null))))
+      .catch(() =>
+        fetch(`history/${code}.json`, { signal: controller.signal })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null)
+      )
       .then((data: HistoryApiResponse | null) => {
         if (!active) return;
         if (data && Array.isArray(data.trips)) {
           setHistoryTrips(data.trips);
         }
-      })
-      .catch(() => {
-        // Fallback to in-memory route.trips silently
       })
       .finally(() => {
         if (active) setLoading(false);

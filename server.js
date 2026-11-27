@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import fs from "node:fs";
 import path from "node:path";
 import express from "express";
 import { ROOT, buildRouteHistory, buildSite, loadConfig, loadRoutes } from "./src/build.js";
@@ -161,6 +162,179 @@ app.get("/api/history/:code", (req, res) => {
       return res.status(404).json({ error: "Route not found." });
     }
     return res.json(history);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+function parseSafeGitHubPagesUrl(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return null;
+  let u;
+  try {
+    u = new URL(s.startsWith("http") ? s : `https://${s}`);
+  } catch {
+    return null;
+  }
+  if (u.protocol !== "https:") return null;
+  if (u.username || u.password || u.port) return null;
+  if (!/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?\.github\.io$/i.test(u.hostname)) {
+    return null;
+  }
+  // Normalize trailing slash on directory path (strip index.html if pasted)
+  let cleanPath = u.pathname.replace(/\/index\.html$/i, "/");
+  if (!cleanPath.endsWith("/")) cleanPath += "/";
+  return `${u.origin}${cleanPath}`;
+}
+
+async function fetchJsonTimeout(url, timeoutMs = 6000) {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      signal: ac.signal,
+      headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+    });
+    if (!res.ok) return { ok: false, status: res.status, data: null };
+    const text = await res.text();
+    if (text.length > 2_000_000) return { ok: false, status: 413, data: null };
+    return { ok: true, status: res.status, data: JSON.parse(text) };
+  } catch (err) {
+    return { ok: false, status: 0, error: err.message || "Network error", data: null };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+app.get("/api/deploy-status", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  try {
+    const metaPath = path.join(PUBLIC_DIR, "build-meta.json");
+    const local = fs.existsSync(metaPath)
+      ? JSON.parse(fs.readFileSync(metaPath, "utf8"))
+      : null;
+
+    const cfg = loadConfig();
+    const configuredRaw =
+      req.query.url ||
+      process.env.GITHUB_PAGES_URL ||
+      cfg.deploy?.github_pages_url ||
+      "";
+
+    if (!String(configuredRaw).trim()) {
+      return res.json({
+        status: "unlinked",
+        label: "Set Pages URL",
+        detail: "Link your github.io URL to compare this workspace against your live GitHub Pages site.",
+        local,
+        remote: null,
+        pagesUrl: null,
+        checkedAt: new Date().toISOString(),
+      });
+    }
+
+    const pagesUrl = parseSafeGitHubPagesUrl(configuredRaw);
+    if (!pagesUrl) {
+      return res.status(400).json({
+        status: "invalid_url",
+        label: "Invalid URL",
+        detail: "Enter a valid https://<username>.github.io/<repo>/ URL.",
+        local,
+        remote: null,
+        pagesUrl: null,
+        checkedAt: new Date().toISOString(),
+      });
+    }
+
+    const bust = `t=${Date.now()}`;
+    const metaRes = await fetchJsonTimeout(`${pagesUrl}build-meta.json?${bust}`);
+    if (metaRes.ok && metaRes.data && metaRes.data.buildId) {
+      const remote = metaRes.data;
+      let status = "behind";
+      let label = "Out of sync";
+      let detail = "Your live GitHub Pages site is running a different build than this workspace.";
+
+      if (local && remote.buildId === local.buildId) {
+        status = "synced";
+        label = "Synced";
+        detail = "GitHub Pages matches this workspace's latest build and fare data.";
+      } else if (
+        local?.generated &&
+        remote.generated &&
+        remote.generated > local.generated
+      ) {
+        status = "ahead";
+        label = "Pages newer";
+        detail = "GitHub Pages has a newer scheduled fare refresh than this local workspace.";
+      } else {
+        status = "behind";
+        label = "Out of sync";
+        detail = "Workspace has unpublished changes not yet live on GitHub Pages. Push to GitHub to deploy.";
+      }
+
+      return res.json({
+        status,
+        label,
+        detail,
+        local,
+        remote,
+        pagesUrl,
+        checkedAt: new Date().toISOString(),
+      });
+    }
+
+    // Fallback: check grid.compact.json or index HTML to confirm site is live on an older pre-manifest build
+    const compactRes = await fetchJsonTimeout(`${pagesUrl}grid.compact.json?${bust}`);
+    if (compactRes.ok && compactRes.data) {
+      return res.json({
+        status: "behind",
+        label: "Out of sync",
+        detail: "GitHub Pages is live on an earlier build (missing latest UI updates). Push to GitHub to deploy.",
+        local,
+        remote: {
+          buildId: compactRes.data.build_id || null,
+          generated: compactRes.data.generated || null,
+          routesCount: Array.isArray(compactRes.data.routes) ? compactRes.data.routes.length : null,
+        },
+        pagesUrl,
+        checkedAt: new Date().toISOString(),
+      });
+    }
+
+    // Last check: HEAD on the Pages root itself
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 5000);
+    try {
+      const rootRes = await fetch(pagesUrl, { method: "HEAD", signal: ac.signal });
+      if (rootRes.ok) {
+        return res.json({
+          status: "behind",
+          label: "Out of sync",
+          detail: "GitHub Pages is live on an older version before this update. Push to GitHub to publish.",
+          local,
+          remote: {
+            buildId: null,
+            generated: rootRes.headers.get("last-modified") || null,
+          },
+          pagesUrl,
+          checkedAt: new Date().toISOString(),
+        });
+      }
+    } catch {
+      // fall through to unreachable
+    } finally {
+      clearTimeout(timer);
+    }
+
+    return res.json({
+      status: "unreachable",
+      label: "Unreachable",
+      detail: "Could not reach that GitHub Pages URL. Verify the address and that GitHub Pages is enabled.",
+      local,
+      remote: null,
+      pagesUrl,
+      checkedAt: new Date().toISOString(),
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

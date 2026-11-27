@@ -1,6 +1,15 @@
 name: Refresh fares
 
 on:
+  push:
+    branches: [main, master]
+    paths:
+      - "site/**"
+      - "src/**"
+      - "routes.csv"
+      - "config.toml"
+      - "package.json"
+      - ".github/workflows/refresh.yml"
   schedule:
     - cron: "0 11 * * *"      # Daily ~6 AM Central. Edit to change cadence.
   workflow_dispatch:           # "Run workflow" button = on-demand refresh
@@ -25,8 +34,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
 
       - name: Look up fares and build site
         timeout-minutes: 70
@@ -35,11 +43,15 @@ jobs:
           IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
           SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
         run: |
-          MODE="${{ github.event.inputs.mode || 'incremental' }}"
-          if [ "$MODE" = "build-only" ]; then node src/refresh.js --build-only
-          elif [ "$MODE" = "mock" ]; then node src/refresh.js --mock
-          elif [ "$MODE" = "g4" ]; then node src/refresh.js --mode=g4
-          else node src/refresh.js --mode=incremental; fi
+          if [ "${{ github.event_name }}" = "push" ]; then
+            node src/refresh.js --build-only
+          else
+            MODE="${{ github.event.inputs.mode || 'incremental' }}"
+            if [ "$MODE" = "build-only" ]; then node src/refresh.js --build-only
+            elif [ "$MODE" = "mock" ]; then node src/refresh.js --mock
+            elif [ "$MODE" = "g4" ]; then node src/refresh.js --mode=g4
+            else node src/refresh.js --mode=incremental; fi
+          fi
 
       # Safety net: if the lookup step failed or timed out, still build the
       # site from whatever prices were saved so nothing is lost.
@@ -48,7 +60,7 @@ jobs:
         run: node src/refresh.js --build-only
 
       - name: Save fare cache and provider health
-        if: always()
+        if: always() && github.event_name != 'push'
         run: |
           git config user.name  "fare-bot"
           git config user.email "fare-bot@users.noreply.github.com"

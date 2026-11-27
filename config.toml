@@ -69,3 +69,9 @@ ignav_per_run         = 50
 ignav_monthly         = 250
 serpapi_per_run       = 10
 serpapi_monthly       = 80
+
+# Optional: set your GitHub Pages URL here (or in the header sync menu) to compare
+# workspace builds against your live GitHub Pages deployment.
+[deploy]
+# github_pages_url = "https://<username>.github.io/<repo>/"
+

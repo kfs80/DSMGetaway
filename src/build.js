@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -562,6 +563,19 @@ export function buildTrendsBundle(force = false) {
   });
 }
 
+export function computeBuildId({ compactGrid, template }) {
+  const hash = crypto.createHash("sha256");
+  // Hash deterministic content (exclude volatile `generated` timestamp)
+  const { generated: _ignored, build_id: _b, ...stableGrid } = compactGrid;
+  hash.update(JSON.stringify(stableGrid));
+  hash.update(template);
+  const bundlePath = path.join(OUT_DIR, "trends-chart.js");
+  if (fs.existsSync(bundlePath)) {
+    hash.update(fs.readFileSync(bundlePath));
+  }
+  return hash.digest("hex").slice(0, 10);
+}
+
 export function buildSite(options = {}) {
   const cfg = options.cfg || loadConfig();
   const routes = options.routes || loadRoutes();
@@ -582,16 +596,54 @@ export function buildSite(options = {}) {
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   buildTrendsBundle(Boolean(options.forceBundle));
+
+  const template = fs.readFileSync(
+    path.join(ROOT, "site", "index.html"),
+    "utf8"
+  );
+  const buildId = computeBuildId({ compactGrid, template });
+  const githubPagesUrl = String(
+    process.env.GITHUB_PAGES_URL || cfg.deploy?.github_pages_url || ""
+  ).trim();
+
+  grid.build_id = buildId;
+  compactGrid.build_id = buildId;
+  if (githubPagesUrl) {
+    grid.github_pages_url = githubPagesUrl;
+    compactGrid.github_pages_url = githubPagesUrl;
+  }
+
   fs.writeFileSync(path.join(OUT_DIR, "grid.json"), JSON.stringify(grid));
   fs.writeFileSync(
     path.join(OUT_DIR, "grid.compact.json"),
     JSON.stringify(compactGrid)
   );
 
-  const template = fs.readFileSync(
-    path.join(ROOT, "site", "index.html"),
-    "utf8"
+  const buildMeta = {
+    buildId,
+    generated: grid.generated,
+    today: grid.today,
+    commitSha: process.env.GITHUB_SHA ? process.env.GITHUB_SHA.slice(0, 7) : null,
+    routesCount: routes.length,
+    pricedTrips: (grid.trip_counts?.live || 0) + (grid.trip_counts?.estimate || 0),
+    githubPagesUrl: githubPagesUrl || null,
+  };
+  fs.writeFileSync(
+    path.join(OUT_DIR, "build-meta.json"),
+    JSON.stringify(buildMeta, null, 2)
   );
+
+  // Emit static per-route historical JSON files so GitHub Pages serves full prior-month history
+  const histDir = path.join(OUT_DIR, "history");
+  fs.mkdirSync(histDir, { recursive: true });
+  for (const r of routes) {
+    if (r.airlines.includes("LINK")) continue;
+    const hist = buildRouteHistory(r.code, { cfg, routes, cache, today });
+    if (hist) {
+      fs.writeFileSync(path.join(histDir, `${r.code}.json`), JSON.stringify(hist));
+    }
+  }
+
   const compactJson = JSON.stringify(compactGrid).replaceAll("</", "<\\/");
   const html = template.replace("/*GRID_DATA*/null", () => compactJson);
   fs.writeFileSync(path.join(OUT_DIR, "index.html"), html);
@@ -599,6 +651,7 @@ export function buildSite(options = {}) {
   return {
     grid,
     compactGrid,
+    buildMeta,
     html,
     routesCount: routes.length,
     tripsCount: trips.length,
