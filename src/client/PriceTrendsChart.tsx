@@ -410,21 +410,10 @@ function PriceTrendsChart() {
       >
         <div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 15,
-                fontWeight: 700,
-                letterSpacing: "-0.015em",
-                color: "var(--ink)",
-              }}
-            >
-              6-Month Price Trends
-            </h2>
             {summary ? (
               <div
                 style={{
-                  fontSize: 12,
+                  fontSize: 12.5,
                   color: "var(--mute)",
                   display: "inline-flex",
                   alignItems: "center",
@@ -450,7 +439,11 @@ function PriceTrendsChart() {
                   pp{hasBags ? " w/ bags" : ""}
                 </span>
               </div>
-            ) : null}
+            ) : (
+              <div style={{ fontSize: 12.5, color: "var(--mute)" }}>
+                Select destinations below to compare 6-month weekend trends
+              </div>
+            )}
           </div>
         </div>
 

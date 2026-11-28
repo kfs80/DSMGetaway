@@ -23,12 +23,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          python-version: "3.11"
-          cache: "pip"
-      - run: pip install -r requirements.txt
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
       - name: Run Spot Check & Compare
         env:
           IGNAV_API_KEY: ${{ secrets.IGNAV_API_KEY }}
@@ -36,15 +35,31 @@ jobs:
           DEST="${{ github.event.inputs.destination }}"
           if [ "${{ github.event_name }}" = "schedule" ] || [ -z "$DEST" ]; then
             echo "Running randomized check..."
-            python src/spot_check.py --random 5
+            node src/spot_check.js --random 5
           else
             echo "Running specific manual check..."
-            python src/spot_check.py --dest "$DEST" --dep "${{ github.event.inputs.depart_date }}" --ret "${{ github.event.inputs.return_date }}"
+            node src/spot_check.js --dest "$DEST" --dep "${{ github.event.inputs.depart_date }}" --ret "${{ github.event.inputs.return_date }}"
           fi
       - name: Commit Log File
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/spot_check_log.csv
-          git commit -m "Update spot check log" || echo "No changes to commit"
-          git push
+          if [ -f data/spot_check_log.csv ]; then git add data/spot_check_log.csv; fi
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Update spot check log"
+          git checkout -- .
+          BRANCH="${GITHUB_REF_NAME:-main}"
+          for attempt in 1 2 3; do
+            git fetch origin "$BRANCH"
+            git rebase -X theirs "origin/$BRANCH"
+            if git push origin "HEAD:$BRANCH"; then
+              exit 0
+            fi
+            echo "Push attempt $attempt conflicted; retrying..."
+            sleep 3
+          done
+          echo "Failed to push after 3 attempts" >&2
+          exit 1

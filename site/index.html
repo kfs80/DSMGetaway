@@ -321,12 +321,13 @@
     color: var(--ink);
   }
 
-  /* ==================== BEST DEALS SPOTLIGHT STRIP ==================== */
+  /* ==================== COLLAPSIBLE SECTIONS & BEST DEALS ==================== */
   .section-head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 8px 14px;
     margin-bottom: 12px;
   }
   .section-head h2 {
@@ -341,9 +342,89 @@
     color: var(--mute);
   }
 
+  .sec-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    border: 0;
+    background: transparent;
+    padding: 3px 6px 3px 0;
+    margin: -3px 0 -3px 0;
+    border-radius: 7px;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+    font-family: inherit;
+    min-width: 0;
+  }
+  .sec-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .sec-chev-box {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--mute);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 140ms var(--ease), color 140ms var(--ease), background-color 140ms var(--ease);
+  }
+  .sec-toggle:hover .sec-chev-box {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .sec-chev {
+    transition: transform 160ms var(--ease);
+  }
+  .sec-toggle[aria-expanded="false"] .sec-chev {
+    transform: rotate(-90deg);
+  }
+  .sec-head-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .sec-expand-cue {
+    display: none;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .is-collapsed > .sec-body {
+    display: none;
+  }
+  .is-collapsed > .section-head,
+  .is-collapsed > .deals-head {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 11px 14px;
+    margin-bottom: 0;
+    cursor: pointer;
+    transition: border-color 140ms var(--ease);
+  }
+  .is-collapsed > .section-head:hover,
+  .is-collapsed > .deals-head:hover {
+    border-color: var(--line-strong);
+  }
+  .is-collapsed .deals-filter {
+    display: none;
+  }
+  .is-collapsed .sec-expand-cue {
+    display: inline;
+  }
+
   .deals-section,
   .trends-section {
-    margin-bottom: 24px;
+    margin-bottom: 22px;
   }
   .deals-head {
     display: flex;
@@ -524,8 +605,35 @@
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
-    padding: 16px 18px;
+    padding: 14px 18px 16px;
     margin-bottom: 14px;
+  }
+  .bag-calc-card.is-collapsed {
+    padding: 11px 14px;
+  }
+  .bag-calc-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .bag-calc-card.is-collapsed .bag-calc-bar {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: 0;
+    cursor: pointer;
+  }
+  .bag-calc-summary {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--mute);
+  }
+  .bag-calc-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.18fr);
     gap: 22px;
@@ -1579,7 +1687,7 @@
   /* ==================== RESPONSIVE ==================== */
   @media (max-width: 1080px) {
     .deals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .bag-calc-card { grid-template-columns: 1fr; gap: 16px; }
+    .bag-calc-grid { grid-template-columns: 1fr; gap: 16px; }
     .bag-col-left { padding-right: 0; border-right: 0; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
   }
   @media (max-width: 720px) {
@@ -1660,199 +1768,253 @@
 
   <!-- Best Deals Spotlight -->
   <section class="deals-section" id="deals">
-    <div class="deals-head">
-      <div>
-        <h2>Lowest Nonstop Weekend Fares</h2>
-        <div class="sec-sub" id="deals-sub">Cheapest upcoming trips matching your bag &amp; party settings</div>
-      </div>
-      <div class="deals-filter" id="deals-filter" role="group" aria-label="Filter Best Deals by airline">
-        <button type="button" data-al="ALL" class="on">All Airlines</button>
-        <button type="button" data-al="AS" class="as-opt">Alaska Airlines <span class="f-code">AS</span></button>
-        <button type="button" data-al="G4">Allegiant <span class="f-code">G4</span></button>
-        <button type="button" data-al="WN">Southwest <span class="f-code">WN</span></button>
-        <button type="button" data-al="F9">Frontier <span class="f-code">F9</span></button>
-        <button type="button" data-al="LEGACY">AA / DL / UA</button>
+    <div class="deals-head" data-sec-head="deals">
+      <button type="button" class="sec-toggle" data-sec-toggle="deals" aria-expanded="true" aria-controls="deals-body">
+        <span class="sec-chev-box" aria-hidden="true">
+          <svg class="sec-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
+        <div>
+          <h2>Lowest Nonstop Weekend Fares</h2>
+          <div class="sec-sub" id="deals-sub">Cheapest upcoming trips matching your bag &amp; party settings</div>
+        </div>
+      </button>
+      <div class="sec-head-meta">
+        <div class="deals-filter" id="deals-filter" role="group" aria-label="Filter Best Deals by airline">
+          <button type="button" data-al="ALL" class="on">All Airlines</button>
+          <button type="button" data-al="AS" class="as-opt">Alaska Airlines <span class="f-code">AS</span></button>
+          <button type="button" data-al="G4">Allegiant <span class="f-code">G4</span></button>
+          <button type="button" data-al="WN">Southwest <span class="f-code">WN</span></button>
+          <button type="button" data-al="F9">Frontier <span class="f-code">F9</span></button>
+          <button type="button" data-al="LEGACY">AA / DL / UA</button>
+        </div>
+        <span class="sec-expand-cue">Expand</span>
       </div>
     </div>
-    <div class="deals-grid" id="deals-grid"></div>
+    <div class="sec-body" id="deals-body">
+      <div class="deals-grid" id="deals-grid"></div>
+    </div>
   </section>
 
-  <!-- 6-Month Price Trends (Recharts) -->
-  <section class="trends-section" id="trends">
-    <div id="trends-chart-root"></div>
+  <!-- 6-Month Price Trends (Recharts) — Collapsed by default -->
+  <section class="trends-section is-collapsed" id="trends">
+    <div class="section-head" data-sec-head="trends">
+      <button type="button" class="sec-toggle" data-sec-toggle="trends" aria-expanded="false" aria-controls="trends-body">
+        <span class="sec-chev-box" aria-hidden="true">
+          <svg class="sec-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
+        <div>
+          <h2>6-Month Price Trends</h2>
+          <div class="sec-sub">Interactive fare curves across up to 6 nonstop destinations</div>
+        </div>
+      </button>
+      <span class="sec-expand-cue">Show chart</span>
+    </div>
+    <div class="sec-body" id="trends-body">
+      <div id="trends-chart-root"></div>
+    </div>
   </section>
 
   <!-- Fare Matrix Section -->
   <section id="matrix">
-    <div class="section-head">
-      <h2>Full Fare Matrix</h2>
-      <div class="sec-sub" id="matrix-count"></div>
+    <div class="section-head" data-sec-head="matrix">
+      <button type="button" class="sec-toggle" data-sec-toggle="matrix" aria-expanded="true" aria-controls="matrix-body">
+        <span class="sec-chev-box" aria-hidden="true">
+          <svg class="sec-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
+        <h2>Full Fare Matrix</h2>
+      </button>
+      <div class="sec-head-meta">
+        <div class="sec-sub" id="matrix-count"></div>
+        <span class="sec-expand-cue">Expand</span>
+      </div>
     </div>
 
-    <!-- Visual Baggage Fee & Trip Cost Calculator -->
-    <div class="bag-calc-card" id="bag-calc" aria-label="Baggage fee and trip cost calculator">
-      <div class="bag-col-left">
-        <div class="bag-head">
-          <div>
-            <div class="bag-title">Baggage &amp; Party Cost Calculator</div>
-            <div class="bag-sub">All prices per person &amp; totals below update automatically</div>
+    <div class="sec-body" id="matrix-body">
+      <!-- Visual Baggage Fee & Trip Cost Calculator -->
+      <div class="bag-calc-card" id="bag-calc" aria-label="Baggage fee and trip cost calculator">
+        <div class="bag-calc-bar" data-sec-head="bag-calc">
+          <button type="button" class="sec-toggle" data-sec-toggle="bag-calc" aria-expanded="true" aria-controls="bag-calc-body">
+            <span class="sec-chev-box" aria-hidden="true">
+              <svg class="sec-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+            <div>
+              <div class="bag-title">Baggage &amp; Party Cost Calculator</div>
+              <div class="bag-sub">All prices per person &amp; totals below update automatically</div>
+            </div>
+          </button>
+          <div class="sec-head-meta">
+            <span class="bag-calc-summary" id="bag-collapsed-summary">1 traveler · 0 carry-on · 0 checked</span>
+            <button type="button" class="bag-reset-btn" id="btn-bag-reset" style="display:none;">Reset bags</button>
           </div>
-          <button type="button" class="bag-reset-btn" id="btn-bag-reset" style="display:none;">Reset bags</button>
         </div>
 
-        <div class="bag-steppers">
-          <div class="bag-step-row">
-            <div class="bag-step-info">
-              <span class="bag-step-ico" aria-hidden="true">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </span>
-              <div>
-                <div class="bag-step-name">Travelers</div>
-                <div class="bag-step-desc">Multiplies all-in per-person fare + bags</div>
+        <div class="bag-calc-grid sec-body" id="bag-calc-body">
+          <div class="bag-col-left">
+            <div class="bag-steppers">
+              <div class="bag-step-row">
+                <div class="bag-step-info">
+                  <span class="bag-step-ico" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </span>
+                  <div>
+                    <div class="bag-step-name">Travelers</div>
+                    <div class="bag-step-desc">Multiplies all-in per-person fare + bags</div>
+                  </div>
+                </div>
+                <div class="stepper" role="group" aria-label="Travelers count">
+                  <button type="button" data-bag-step="people:-1" aria-label="Decrease travelers">−</button>
+                  <span class="stepper-val" id="bag-val-people">1</span>
+                  <button type="button" data-bag-step="people:1" aria-label="Increase travelers">+</button>
+                </div>
               </div>
-            </div>
-            <div class="stepper" role="group" aria-label="Travelers count">
-              <button type="button" data-bag-step="people:-1" aria-label="Decrease travelers">−</button>
-              <span class="stepper-val" id="bag-val-people">1</span>
-              <button type="button" data-bag-step="people:1" aria-label="Increase travelers">+</button>
+
+              <div class="bag-step-row">
+                <div class="bag-step-info">
+                  <span class="bag-step-ico" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="7" width="12" height="14" rx="2"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><path d="M6 12h12"/></svg>
+                  </span>
+                  <div>
+                    <div class="bag-step-name">Carry-on bags <span style="font-weight:400;color:var(--mute);">/ person</span></div>
+                    <div class="bag-step-desc">$40/way on Allegiant &amp; Frontier · $0 on AA/DL/UA/WN/AS</div>
+                  </div>
+                </div>
+                <div class="stepper" role="group" aria-label="Carry-on bags per person">
+                  <button type="button" data-bag-step="carry:-1" aria-label="Decrease carry-on bags">−</button>
+                  <span class="stepper-val" id="bag-val-carry">0</span>
+                  <button type="button" data-bag-step="carry:1" aria-label="Increase carry-on bags">+</button>
+                </div>
+              </div>
+
+              <div class="bag-step-row">
+                <div class="bag-step-info">
+                  <span class="bag-step-ico" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="15" rx="2"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M8 10v7"/><path d="M16 10v7"/></svg>
+                  </span>
+                  <div>
+                    <div class="bag-step-name">Checked bags <span style="font-weight:400;color:var(--mute);">/ person</span></div>
+                    <div class="bag-step-desc">$40 each way ($80 round trip) per checked bag</div>
+                  </div>
+                </div>
+                <div class="stepper" role="group" aria-label="Checked bags per person">
+                  <button type="button" data-bag-step="checked:-1" aria-label="Decrease checked bags">−</button>
+                  <span class="stepper-val" id="bag-val-checked">0</span>
+                  <button type="button" data-bag-step="checked:1" aria-label="Increase checked bags">+</button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="bag-step-row">
-            <div class="bag-step-info">
-              <span class="bag-step-ico" aria-hidden="true">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="7" width="12" height="14" rx="2"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><path d="M6 12h12"/></svg>
-              </span>
+          <div class="bag-col-right">
+            <div class="bag-preview-top">
               <div>
-                <div class="bag-step-name">Carry-on bags <span style="font-weight:400;color:var(--mute);">/ person</span></div>
-                <div class="bag-step-desc">$40/way on Allegiant &amp; Frontier · $0 on AA/DL/UA/WN/AS</div>
+                <div class="bag-title">Live Trip Cost Breakdown</div>
+                <div class="bag-sub" id="bag-preview-sub">Cheapest upcoming weekend trip</div>
               </div>
+              <select id="bag-trip-select" class="bag-trip-select" aria-label="Preview baggage fees on a route"></select>
             </div>
-            <div class="stepper" role="group" aria-label="Carry-on bags per person">
-              <button type="button" data-bag-step="carry:-1" aria-label="Decrease carry-on bags">−</button>
-              <span class="stepper-val" id="bag-val-carry">0</span>
-              <button type="button" data-bag-step="carry:1" aria-label="Increase carry-on bags">+</button>
-            </div>
-          </div>
 
-          <div class="bag-step-row">
-            <div class="bag-step-info">
-              <span class="bag-step-ico" aria-hidden="true">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="15" rx="2"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M8 10v7"/><path d="M16 10v7"/></svg>
-              </span>
+            <div class="bag-kpis">
               <div>
-                <div class="bag-step-name">Checked bags <span style="font-weight:400;color:var(--mute);">/ person</span></div>
-                <div class="bag-step-desc">$40 each way ($80 round trip) per checked bag</div>
+                <div class="bag-kpi-label">Price per person (incl. bags)</div>
+                <div class="bag-kpi-val is-accent" id="bag-kpi-pp">—</div>
+                <div class="bag-kpi-sub" id="bag-kpi-pp-sub">Select a route</div>
+              </div>
+              <div>
+                <div class="bag-kpi-label" id="bag-kpi-total-label">Total trip cost</div>
+                <div class="bag-kpi-val" id="bag-kpi-total">—</div>
+                <div class="bag-kpi-sub" id="bag-kpi-total-sub">Round trip estimate</div>
               </div>
             </div>
-            <div class="stepper" role="group" aria-label="Checked bags per person">
-              <button type="button" data-bag-step="checked:-1" aria-label="Decrease checked bags">−</button>
-              <span class="stepper-val" id="bag-val-checked">0</span>
-              <button type="button" data-bag-step="checked:1" aria-label="Increase checked bags">+</button>
+
+            <div class="bag-bar-wrap">
+              <div class="bag-bar-track" aria-hidden="true">
+                <div class="bag-bar-fare" id="bag-bar-fare" style="width:100%"></div>
+                <div class="bag-bar-fees" id="bag-bar-fees" style="width:0%"></div>
+              </div>
+              <div class="bag-bar-legend" id="bag-bar-legend"></div>
             </div>
+
+            <div class="bag-policy-grid" id="bag-policy-grid"></div>
           </div>
         </div>
       </div>
 
-      <div class="bag-col-right">
-        <div class="bag-preview-top">
-          <div>
-            <div class="bag-title">Live Trip Cost Breakdown</div>
-            <div class="bag-sub" id="bag-preview-sub">Cheapest upcoming weekend trip</div>
-          </div>
-          <select id="bag-trip-select" class="bag-trip-select" aria-label="Preview baggage fees on a route"></select>
-        </div>
+      <div class="controls-card">
+        <div class="controls-row">
+          <div class="controls-left">
+            <span class="seg" id="view" role="group" aria-label="Grid time grouping">
+              <button type="button" data-v="weekend" class="on">By weekend</button>
+              <button type="button" data-v="month">By month</button>
+            </span>
 
-        <div class="bag-kpis">
-          <div>
-            <div class="bag-kpi-label">Price per person (incl. bags)</div>
-            <div class="bag-kpi-val is-accent" id="bag-kpi-pp">—</div>
-            <div class="bag-kpi-sub" id="bag-kpi-pp-sub">Select a route</div>
-          </div>
-          <div>
-            <div class="bag-kpi-label" id="bag-kpi-total-label">Total trip cost</div>
-            <div class="bag-kpi-val" id="bag-kpi-total">—</div>
-            <div class="bag-kpi-sub" id="bag-kpi-total-sub">Round trip estimate</div>
-          </div>
-        </div>
+            <span class="seg" id="tier-filter" role="group" aria-label="Filter route tier">
+              <button type="button" data-tier="all" class="on">All</button>
+              <button type="button" data-tier="core">Core</button>
+              <button type="button" data-tier="hub">Hubs</button>
+            </span>
 
-        <div class="bag-bar-wrap">
-          <div class="bag-bar-track" aria-hidden="true">
-            <div class="bag-bar-fare" id="bag-bar-fare" style="width:100%"></div>
-            <div class="bag-bar-fees" id="bag-bar-fees" style="width:0%"></div>
-          </div>
-          <div class="bag-bar-legend" id="bag-bar-legend"></div>
-        </div>
+            <div class="search-wrap">
+              <input type="search" id="search" class="search-input" placeholder="Filter city, state, or code..." aria-label="Filter destinations">
+              <button type="button" id="search-clear" class="search-clear" aria-label="Clear filter">×</button>
+            </div>
 
-        <div class="bag-policy-grid" id="bag-policy-grid"></div>
-      </div>
-    </div>
-
-    <div class="controls-card">
-      <div class="controls-row">
-        <div class="controls-left">
-          <span class="seg" id="view" role="group" aria-label="Grid time grouping">
-            <button type="button" data-v="weekend" class="on">By weekend</button>
-            <button type="button" data-v="month">By month</button>
-          </span>
-
-          <span class="seg" id="tier-filter" role="group" aria-label="Filter route tier">
-            <button type="button" data-tier="all" class="on">All</button>
-            <button type="button" data-tier="core">Core</button>
-            <button type="button" data-tier="hub">Hubs</button>
-          </span>
-
-          <div class="search-wrap">
-            <input type="search" id="search" class="search-input" placeholder="Filter city, state, or code..." aria-label="Filter destinations">
-            <button type="button" id="search-clear" class="search-clear" aria-label="Clear filter">×</button>
+            <label class="ctl">Max price
+              <select id="maxpp">
+                <option value="0">Any</option>
+                <option value="100">Under $100</option>
+                <option value="150">Under $150</option>
+                <option value="200">Under $200</option>
+                <option value="250">Under $250</option>
+                <option value="300">Under $300</option>
+              </select>
+            </label>
           </div>
 
-          <label class="ctl">Max price
-            <select id="maxpp">
-              <option value="0">Any</option>
-              <option value="100">Under $100</option>
-              <option value="150">Under $150</option>
-              <option value="200">Under $200</option>
-              <option value="250">Under $250</option>
-              <option value="300">Under $300</option>
-            </select>
-          </label>
+          <div class="controls-right">
+            <label class="ctl">Sort
+              <select id="sort">
+                <option value="cheap">Cheapest first</option>
+                <option value="state">State</option>
+                <option value="city">City A–Z</option>
+                <option value="airline">Airline</option>
+              </select>
+            </label>
+            <label class="chk" id="empty-wrap" style="display:none;">
+              <input type="checkbox" id="showEmpty">
+              <span id="empty-label">Show pending</span>
+            </label>
+            <button type="button" class="btn btn-sm" id="btn-sources">Sources</button>
+          </div>
         </div>
 
-        <div class="controls-right">
-          <label class="ctl">Sort
-            <select id="sort">
-              <option value="cheap">Cheapest first</option>
-              <option value="state">State</option>
-              <option value="city">City A–Z</option>
-              <option value="airline">Airline</option>
-            </select>
-          </label>
-          <label class="chk" id="empty-wrap" style="display:none;">
-            <input type="checkbox" id="showEmpty">
-            <span id="empty-label">Show pending</span>
-          </label>
-          <button type="button" class="btn btn-sm" id="btn-sources">Sources</button>
-        </div>
+        <div class="legend" id="legend"></div>
       </div>
 
-      <div class="legend" id="legend"></div>
-    </div>
-
-    <div class="grid-shell">
-      <div class="grid-scroll">
-        <table class="grid-table" id="grid"></table>
+      <div class="grid-shell">
+        <div class="grid-scroll">
+          <table class="grid-table" id="grid"></table>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- Other Direct Flights -->
   <section class="links-section" id="other-flights">
-    <div class="section-head">
-      <h2>Other Direct Flights Out of DSM</h2>
-      <div class="sec-sub">Major hubs with typically higher weekend fares — click any destination to search Google Flights</div>
+    <div class="section-head" data-sec-head="other-flights">
+      <button type="button" class="sec-toggle" data-sec-toggle="other-flights" aria-expanded="true" aria-controls="other-flights-body">
+        <span class="sec-chev-box" aria-hidden="true">
+          <svg class="sec-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </span>
+        <div>
+          <h2>Other Direct Flights Out of DSM</h2>
+          <div class="sec-sub">Major hubs with typically higher weekend fares — click any destination to search Google Flights</div>
+        </div>
+      </button>
+      <span class="sec-expand-cue">Expand</span>
     </div>
-    <div class="link-wrap" id="link-grid"></div>
+    <div class="sec-body" id="other-flights-body">
+      <div class="link-wrap" id="link-grid"></div>
+    </div>
   </section>
 
   <footer id="foot"></footer>
@@ -2273,6 +2435,11 @@ try {
     const resetBtn = $("#btn-bag-reset");
     if (resetBtn) {
       resetBtn.style.display = (state.carry > 0 || state.checked > 0) ? "inline-flex" : "none";
+    }
+    const bagSum = $("#bag-collapsed-summary");
+    if (bagSum) {
+      const pTxt = `${state.people} ${state.people === 1 ? "traveler" : "travelers"}`;
+      bagSum.textContent = `${pTxt} · ${state.carry} carry-on · ${state.checked} checked`;
     }
 
     // Build real live trip options for the interactive cost preview
@@ -3296,6 +3463,69 @@ try {
     if (document.visibilityState === "visible" && Date.now() - lastSyncCheckAt > 10000) {
       checkDeploySync({ silent: true });
     }
+  });
+
+  // ======================= COLLAPSIBLE SECTIONS =======================
+  const DEFAULT_COLLAPSED = { trends: true };
+  let collapsedSecs = { ...DEFAULT_COLLAPSED };
+  try {
+    const raw = store.get("dsmCollapsedSecs");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        collapsedSecs = { ...DEFAULT_COLLAPSED, ...parsed };
+      }
+    }
+  } catch { /* ignore invalid stored JSON */ }
+
+  function setSectionCollapsed(secId, isCollapsed, persist = true) {
+    const sec = document.getElementById(secId);
+    if (!sec) return;
+    const collapsed = Boolean(isCollapsed);
+    sec.classList.toggle("is-collapsed", collapsed);
+    const btn = sec.querySelector(`[data-sec-toggle="${secId}"]`);
+    if (btn) btn.setAttribute("aria-expanded", String(!collapsed));
+    collapsedSecs[secId] = collapsed;
+    if (persist) {
+      try { store.set("dsmCollapsedSecs", JSON.stringify(collapsedSecs)); } catch {}
+    }
+    // Recharts ResponsiveContainer needs a resize tick after transitioning from display:none
+    if (secId === "trends" && !collapsed) {
+      requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+      setTimeout(() => window.dispatchEvent(new Event("resize")), 60);
+    }
+  }
+
+  document.querySelectorAll("[data-sec-toggle]").forEach(btn => {
+    const secId = btn.dataset.secToggle;
+    setSectionCollapsed(secId, Boolean(collapsedSecs[secId]), false);
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const sec = document.getElementById(secId);
+      const next = sec ? !sec.classList.contains("is-collapsed") : true;
+      setSectionCollapsed(secId, next, true);
+    });
+  });
+
+  // Allow clicking anywhere on a collapsed header strip to expand it
+  document.querySelectorAll("[data-sec-head]").forEach(head => {
+    head.addEventListener("click", e => {
+      const secId = head.dataset.secHead;
+      const sec = document.getElementById(secId);
+      if (!sec || !sec.classList.contains("is-collapsed")) return;
+      if (e.target.closest("button, a, select, input")) return;
+      setSectionCollapsed(secId, false, true);
+    });
+  });
+
+  // Auto-expand target section if user clicks its top-nav jump link
+  document.querySelectorAll('.topnav a[href^="#"]').forEach(link => {
+    link.addEventListener("click", () => {
+      const targetId = (link.getAttribute("href") || "").slice(1);
+      if (targetId && document.getElementById(targetId)?.classList.contains("is-collapsed")) {
+        setSectionCollapsed(targetId, false, true);
+      }
+    });
   });
 
   legend();

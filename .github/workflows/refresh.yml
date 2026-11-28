@@ -31,8 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       - run: npm install --no-audit --no-fund
@@ -60,18 +60,25 @@ jobs:
         if: failure() || cancelled()
         run: node src/refresh.js --build-only
 
+      # Upload the freshly built site BEFORE rebasing/cleaning working tree files.
+      - uses: actions/upload-pages-artifact@v5
+        if: always()
+        with: { path: public }
+
       - name: Save fare cache and provider health
         if: always() && github.event_name != 'push'
         run: |
           git config user.name  "fare-bot"
           git config user.email "fare-bot@users.noreply.github.com"
-          [ -f data/fares.json ] && git add data/fares.json
-          [ -f data/provider_health.json ] && git add data/provider_health.json
+          if [ -f data/fares.json ]; then git add data/fares.json; fi
+          if [ -f data/provider_health.json ]; then git add data/provider_health.json; fi
           if git diff --cached --quiet; then
             echo "No fare cache changes to commit."
             exit 0
           fi
           git commit -m "Fare refresh $(date -u +%F)"
+          # Clear unstaged generated outputs (already uploaded above) so git rebase stays clean.
+          git checkout -- .
           BRANCH="${GITHUB_REF_NAME:-main}"
           for attempt in 1 2 3; do
             git fetch origin "$BRANCH"
@@ -85,10 +92,6 @@ jobs:
           echo "Failed to push after 3 attempts" >&2
           exit 1
 
-      - uses: actions/upload-pages-artifact@v3
-        if: always()
-        with: { path: public }
-
   deploy:
     needs: refresh
     if: always()
@@ -96,4 +99,4 @@ jobs:
     environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
     steps:
       - id: d
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
